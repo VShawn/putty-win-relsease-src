@@ -34,7 +34,8 @@ static int rlogin_closing(Plug plug, char *error_msg, int error_code,
     }
     if (error_msg) {
 	/* A socket error has occurred. */
-	connection_fatal(error_msg);
+	logevent(error_msg);
+	connection_fatal("%s", error_msg);
     }				       /* Otherwise, the remote side closed the connection normally. */
     return 0;
 }
@@ -68,7 +69,8 @@ static int rlogin_receive(Plug plug, int urgent, char *data, int len)
 	    }
 	    firstbyte = 0;
 	}
-	c_write(data, len);
+	if (len > 0)
+            c_write(data, len);
     }
     return 1;
 }
@@ -121,7 +123,7 @@ static char *rlogin_init(char *host, int port, char **realhost, int nodelay)
 	sprintf(buf, "Connecting to %.100s port %d", addrbuf, port);
 	logevent(buf);
     }
-    s = sk_new(addr, port, 1, 0, nodelay, &fn_table_ptr);
+    s = new_connection(addr, *realhost, port, 1, 0, nodelay, &fn_table_ptr);
     if ((err = sk_socket_error(s)))
 	return err;
 

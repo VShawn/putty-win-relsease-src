@@ -15,6 +15,27 @@
 
 int console_batch_mode = FALSE;
 
+/*
+ * Clean up and exit.
+ */
+void cleanup_exit(int code)
+{
+    /*
+     * Clean up.
+     */
+    sk_cleanup();
+    WSACleanup();
+
+    if (cfg.protocol == PROT_SSH) {
+	random_save_seed();
+#ifdef MSCRYPTOAPI
+	crypto_wrapup();
+#endif
+    }
+
+    exit(code);
+}
+
 void verify_ssh_host_key(char *host, int port, char *keytype,
 			 char *keystr, char *fingerprint)
 {
@@ -86,7 +107,7 @@ void verify_ssh_host_key(char *host, int port, char *keytype,
     if (ret == 2) {		       /* key was different */
 	if (console_batch_mode) {
 	    fprintf(stderr, wrongmsg_batch, fingerprint);
-	    exit(1);
+	    cleanup_exit(1);
 	}
 	fprintf(stderr, wrongmsg, fingerprint);
 	fflush(stderr);
@@ -94,7 +115,7 @@ void verify_ssh_host_key(char *host, int port, char *keytype,
     if (ret == 1) {		       /* key was absent */
 	if (console_batch_mode) {
 	    fprintf(stderr, absentmsg_batch, fingerprint);
-	    exit(1);
+	    cleanup_exit(1);
 	}
 	fprintf(stderr, absentmsg, fingerprint);
 	fflush(stderr);
@@ -112,7 +133,7 @@ void verify_ssh_host_key(char *host, int port, char *keytype,
 	    store_host_key(host, port, keytype, keystr);
     } else {
 	fprintf(stderr, abandoned);
-	exit(0);
+	cleanup_exit(0);
     }
 }
 
@@ -143,7 +164,7 @@ void askcipher(char *ciphername, int cs)
 		(cs == 0) ? "" :
 		(cs == 1) ? "client-to-server " : "server-to-client ",
 		ciphername);
-	exit(1);
+	cleanup_exit(1);
     }
 
     fprintf(stderr, msg,
@@ -163,7 +184,7 @@ void askcipher(char *ciphername, int cs)
 	return;
     } else {
 	fprintf(stderr, abandoned);
-	exit(0);
+	cleanup_exit(0);
     }
 }
 
@@ -191,6 +212,9 @@ int askappend(char *filename)
 
     char line[32];
 
+    if (cfg.logxfovr != LGXF_ASK) {
+	return ((cfg.logxfovr == LGXF_OVR) ? 2 : 1);
+    }
     if (console_batch_mode) {
 	fprintf(stderr, msgtemplate_batch, FILENAME_MAX, filename);
 	fflush(stderr);
@@ -237,26 +261,11 @@ void logevent(char *string)
 {
 }
 
-char *console_password = NULL;
-
 int console_get_line(const char *prompt, char *str,
 			    int maxlen, int is_pw)
 {
     HANDLE hin, hout;
     DWORD savemode, newmode, i;
-
-    if (is_pw && console_password) {
-	static int tried_once = 0;
-
-	if (tried_once) {
-	    return 0;
-	} else {
-	    strncpy(str, console_password, maxlen);
-	    str[maxlen - 1] = '\0';
-	    tried_once = 1;
-	    return 1;
-	}
-    }
 
     if (console_batch_mode) {
 	if (maxlen > 0)
@@ -266,7 +275,7 @@ int console_get_line(const char *prompt, char *str,
 	hout = GetStdHandle(STD_OUTPUT_HANDLE);
 	if (hin == INVALID_HANDLE_VALUE || hout == INVALID_HANDLE_VALUE) {
 	    fprintf(stderr, "Cannot get standard input/output handles\n");
-	    exit(1);
+	    cleanup_exit(1);
 	}
 
 	GetConsoleMode(hin, &savemode);

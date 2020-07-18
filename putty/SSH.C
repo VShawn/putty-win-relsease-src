@@ -19,9 +19,21 @@
                       if ((flags & FLAG_STDERR) && (flags & FLAG_VERBOSE)) \
                       { fprintf(stderr, "%s\n", s); fflush(stderr); } }
 
+/* logevent, only printf-formatted. */
+void logeventf(char *fmt, ...)
+{
+    va_list ap;
+    char stuff[200];
+
+    va_start(ap, fmt);
+    vsprintf(stuff, fmt, ap);
+    va_end(ap);
+    logevent(stuff);
+}
+
 #define bombout(msg) ( ssh_state = SSH_STATE_CLOSED, \
                           (s ? sk_close(s), s = NULL : 0), \
-                          connection_fatal msg )
+                          logeventf msg, connection_fatal msg )
 
 #define SSH1_MSG_DISCONNECT                       1	/* 0x1 */
 #define SSH1_SMSG_PUBLIC_KEY                      2	/* 0x2 */
@@ -168,6 +180,10 @@ static const char *const ssh2_disconnect_reasons[] = {
 #define BUG_CHOKES_ON_SSH1_IGNORE                 1
 #define BUG_SSH2_HMAC                             2
 #define BUG_NEEDS_SSH1_PLAIN_PASSWORD        	  4
+#define BUG_CHOKES_ON_RSA	        	  8
+#define BUG_SSH2_RSA_PADDING	        	 16
+#define BUG_SSH2_DERIVEKEY                       32
+#define BUG_SSH2_DH_GEX                          64
 
 static int ssh_pkt_ctx = 0;
 
@@ -411,6 +427,16 @@ enum {				       /* channel types */
 struct ssh_channel {
     unsigned remoteid, localid;
     int type;
+    /*
+     * In SSH1, this value contains four bits:
+     * 
+     *   1   We have sent SSH1_MSG_CHANNEL_CLOSE.
+     *   2   We have sent SSH1_MSG_CHANNEL_CLOSE_CONFIRMATION.
+     *   4   We have received SSH1_MSG_CHANNEL_CLOSE.
+     *   8   We have received SSH1_MSG_CHANNEL_CLOSE_CONFIRMATION.
+     * 
+     * A channel is completely finished with when all four bits are set.
+     */
     int closes;
     union {
 	struct ssh1_data_channel {
@@ -501,8 +527,6 @@ static const struct ssh_compress *sccomp = NULL;
 static const struct ssh_kex *kex = NULL;
 static const struct ssh_signkey *hostkey = NULL;
 static unsigned char ssh2_session_id[20];
-int (*ssh_get_line) (const char *prompt, char *str, int maxlen,
-		     int is_pw) = NULL;
 
 static char *savedhost;
 static int savedport;
@@ -791,11 +815,11 @@ static int ssh1_rdpkt(unsigned char **data, int *datalen)
 
     if (pktin.type == SSH1_MSG_DEBUG) {
 	/* log debug message */
-	char buf[80];
+	char buf[512];
 	int stringlen = GET_32BIT(pktin.body);
-	strcpy(buf, "Remote: ");
-	if (stringlen > 70)
-	    stringlen = 70;
+	strcpy(buf, "Remote debug message: ");
+	if (stringlen > 480)
+	    stringlen = 480;
 	memcpy(buf + 8, pktin.body + 4, stringlen);
 	buf[8 + stringlen] = '\0';
 	logevent(buf);
@@ -816,7 +840,7 @@ static int ssh1_rdpkt(unsigned char **data, int *datalen)
 	    msglen = sizeof(buf) - nowlen - 1;
 	memcpy(buf + nowlen, pktin.body + 4, msglen);
 	buf[nowlen + msglen] = '\0';
-	logevent(buf);
+	/* logevent(buf); (this is now done within the bombout macro) */
 	bombout(("Server sent disconnect message:\n\"%s\"", buf+nowlen));
 	crReturn(0);
     }
@@ -871,6 +895,15 @@ static int ssh2_rdpkt(unsigned char **data, int *datalen)
      */
     st->len = GET_32BIT(pktin.data);
     st->pad = pktin.data[4];
+
+    /*
+     * _Completely_ silly lengths should be stomped on before they
+     * do us any more damage.
+     */
+    if (st->len < 0 || st->pad < 0 || st->len + st->pad < 0) {
+	bombout(("Incoming packet was garbled on decryption"));
+	crReturn(0);
+    }
 
     /*
      * This enables us to deduce the payload length.
@@ -1527,6 +1560,7 @@ static int ssh2_pkt_getbool(void)
 static void ssh2_pkt_getstring(char **p, int *length)
 {
     *p = NULL;
+    *length = 0;
     if (pktin.length - pktin.savedpos < 4)
 	return;
     *length = GET_32BIT(pktin.data + pktin.savedpos);
@@ -1554,6 +1588,75 @@ static Bignum ssh2_pkt_getmp(void)
 }
 
 /*
+ * Helper function to add an SSH2 signature blob to a packet.
+ * Expects to be shown the public key blob as well as the signature
+ * blob. Normally works just like ssh2_pkt_addstring, but will
+ * fiddle with the signature packet if necessary for
+ * BUG_SSH2_RSA_PADDING.
+ */
+static void ssh2_add_sigblob(void *pkblob_v, int pkblob_len,
+			     void *sigblob_v, int sigblob_len)
+{
+    unsigned char *pkblob = (unsigned char *)pkblob_v;
+    unsigned char *sigblob = (unsigned char *)sigblob_v;
+
+    /* dmemdump(pkblob, pkblob_len); */
+    /* dmemdump(sigblob, sigblob_len); */
+
+    /*
+     * See if this is in fact an ssh-rsa signature and a buggy
+     * server; otherwise we can just do this the easy way.
+     */
+    if ((ssh_remote_bugs & BUG_SSH2_RSA_PADDING) &&
+	(GET_32BIT(pkblob) == 7 && !memcmp(pkblob+4, "ssh-rsa", 7))) {
+	int pos, len, siglen;
+
+	/*
+	 * Find the byte length of the modulus.
+	 */
+
+	pos = 4+7;		       /* skip over "ssh-rsa" */
+	pos += 4 + GET_32BIT(pkblob+pos);   /* skip over exponent */
+	len = GET_32BIT(pkblob+pos);   /* find length of modulus */
+	pos += 4;		       /* find modulus itself */
+	while (len > 0 && pkblob[pos] == 0)
+	    len--, pos++;
+	/* debug(("modulus length is %d\n", len)); */
+
+	/*
+	 * Now find the signature integer.
+	 */
+	pos = 4+7;		       /* skip over "ssh-rsa" */
+	siglen = GET_32BIT(sigblob+pos);
+	/* debug(("signature length is %d\n", siglen)); */
+
+	if (len != siglen) {
+	    unsigned char newlen[4];
+	    ssh2_pkt_addstring_start();
+	    ssh2_pkt_addstring_data(sigblob, pos);
+	    /* dmemdump(sigblob, pos); */
+	    pos += 4;		       /* point to start of actual sig */
+	    PUT_32BIT(newlen, len);
+	    ssh2_pkt_addstring_data(newlen, 4);
+	    /* dmemdump(newlen, 4); */
+	    newlen[0] = 0;
+	    while (len-- > siglen) {
+		ssh2_pkt_addstring_data(newlen, 1);
+		/* dmemdump(newlen, 1); */
+	    }
+	    ssh2_pkt_addstring_data(sigblob+pos, siglen);
+	    /* dmemdump(sigblob+pos, siglen); */
+	    return;
+	}
+
+	/* Otherwise fall through and do it the easy way. */
+    }
+
+    ssh2_pkt_addstring_start();
+    ssh2_pkt_addstring_data(sigblob, sigblob_len);
+}
+
+/*
  * Examine the remote side's version string and compare it against
  * a list of known buggy implementations.
  */
@@ -1568,9 +1671,11 @@ static void ssh_detect_bugs(char *vstring)
 
     ssh_remote_bugs = 0;
 
-    if (!strcmp(imp, "1.2.18") || !strcmp(imp, "1.2.19") ||
-	!strcmp(imp, "1.2.20") || !strcmp(imp, "1.2.21") ||
-	!strcmp(imp, "1.2.22") || !strcmp(imp, "Cisco-1.25")) {
+    if (cfg.sshbug_ignore1 == BUG_ON ||
+	(cfg.sshbug_ignore1 == BUG_AUTO &&
+	 (!strcmp(imp, "1.2.18") || !strcmp(imp, "1.2.19") ||
+	  !strcmp(imp, "1.2.20") || !strcmp(imp, "1.2.21") ||
+	  !strcmp(imp, "1.2.22") || !strcmp(imp, "Cisco-1.25")))) {
 	/*
 	 * These versions don't support SSH1_MSG_IGNORE, so we have
 	 * to use a different defence against password length
@@ -1580,7 +1685,9 @@ static void ssh_detect_bugs(char *vstring)
 	logevent("We believe remote version has SSH1 ignore bug");
     }
 
-    if (!strcmp(imp, "Cisco-1.25")) {
+    if (cfg.sshbug_plainpw1 == BUG_ON ||
+	(cfg.sshbug_plainpw1 == BUG_AUTO &&
+	 (!strcmp(imp, "Cisco-1.25")))) {
 	/*
 	 * These versions need a plain password sent; they can't
 	 * handle having a null and a random length of data after
@@ -1590,14 +1697,59 @@ static void ssh_detect_bugs(char *vstring)
 	logevent("We believe remote version needs a plain SSH1 password");
     }
 
-    if (!strncmp(imp, "2.1.0", 5) || !strncmp(imp, "2.0.", 4) ||
-	!strncmp(imp, "2.2.0", 5) || !strncmp(imp, "2.3.0", 5) ||
-	!strncmp(imp, "2.1 ", 4)) {
+    if (cfg.sshbug_rsa1 == BUG_ON ||
+	(cfg.sshbug_rsa1 == BUG_AUTO &&
+	 (!strcmp(imp, "Cisco-1.25")))) {
+	/*
+	 * These versions apparently have no clue whatever about
+	 * RSA authentication and will panic and die if they see
+	 * an AUTH_RSA message.
+	 */
+	ssh_remote_bugs |= BUG_CHOKES_ON_RSA;
+	logevent("We believe remote version can't handle RSA authentication");
+    }
+
+    if (cfg.sshbug_hmac2 == BUG_ON ||
+	(cfg.sshbug_hmac2 == BUG_AUTO &&
+	 (!strncmp(imp, "2.1.0", 5) || !strncmp(imp, "2.0.", 4) ||
+	  !strncmp(imp, "2.2.0", 5) || !strncmp(imp, "2.3.0", 5) ||
+	  !strncmp(imp, "2.1 ", 4)))) {
 	/*
 	 * These versions have the HMAC bug.
 	 */
 	ssh_remote_bugs |= BUG_SSH2_HMAC;
 	logevent("We believe remote version has SSH2 HMAC bug");
+    }
+
+    if (cfg.sshbug_derivekey2 == BUG_ON ||
+	(cfg.sshbug_derivekey2 == BUG_AUTO &&
+	 (!strncmp(imp, "2.0.", 4)))) {
+	/*
+	 * These versions have the key-derivation bug (failing to
+	 * include the literal shared secret in the hashes that
+	 * generate the keys).
+	 */
+	ssh_remote_bugs |= BUG_SSH2_DERIVEKEY;
+	logevent("We believe remote version has SSH2 key-derivation bug");
+    }
+
+    if (cfg.sshbug_rsapad2 == BUG_ON ||
+	(cfg.sshbug_rsapad2 == BUG_AUTO &&
+	 ((!strncmp(imp, "OpenSSH_2.", 10) && imp[10]>='5' && imp[10]<='9') ||
+	  (!strncmp(imp, "OpenSSH_3.", 10) && imp[10]>='0' && imp[10]<='2')))){
+	/*
+	 * These versions have the SSH2 RSA padding bug.
+	 */
+	ssh_remote_bugs |= BUG_SSH2_RSA_PADDING;
+	logevent("We believe remote version has SSH2 RSA padding bug");
+    }
+
+    if (cfg.sshbug_dhgex2 == BUG_ON) {
+	/*
+	 * These versions have the SSH2 DH GEX bug.
+	 */
+	ssh_remote_bugs |= BUG_SSH2_DH_GEX;
+	logevent("We believe remote version has SSH2 DH group exchange bug");
     }
 }
 
@@ -1609,6 +1761,7 @@ static int do_ssh_init(unsigned char c)
     static int vstrsize;
     static char *vlog;
     static int i;
+    static int proto1, proto2;
 
     crBegin;
 
@@ -1665,12 +1818,26 @@ static int do_ssh_init(unsigned char c)
     sfree(vlog);
 
     /*
-     * Server version "1.99" means we can choose whether we use v1
-     * or v2 protocol. Choice is based on cfg.sshprot.
+     * Decide which SSH protocol version to support.
      */
-    if (ssh_versioncmp(version, cfg.sshprot == 1 ? "2.0" : "1.99") >= 0) {
+
+    /* Anything strictly below "2.0" means protocol 1 is supported. */
+    proto1 = ssh_versioncmp(version, "2.0") < 0;
+    /* Anything greater or equal to "1.99" means protocol 2 is supported. */
+    proto2 = ssh_versioncmp(version, "1.99") >= 0;
+
+    if (cfg.sshprot == 0 && !proto1) {
+	bombout(("SSH protocol version 1 required by user but not provided by server"));
+	crReturn(0);
+    }
+    if (cfg.sshprot == 3 && !proto2) {
+	bombout(("SSH protocol version 2 required by user but not provided by server"));
+	crReturn(0);
+    }
+
+    if (proto2 && (cfg.sshprot >= 2 || !proto1)) {
 	/*
-	 * This is a v2 server. Begin v2 protocol.
+	 * Use v2 protocol.
 	 */
 	char verstring[80], vlog[100];
 	sprintf(verstring, "SSH-2.0-%s", sshver);
@@ -1690,7 +1857,7 @@ static int do_ssh_init(unsigned char c)
 	s_rdpkt = ssh2_rdpkt;
     } else {
 	/*
-	 * This is a v1 server. Begin v1 protocol.
+	 * Use v1 protocol.
 	 */
 	char verstring[80], vlog[100];
 	sprintf(verstring, "SSH-%s-%s",
@@ -1699,6 +1866,7 @@ static int do_ssh_init(unsigned char c)
 	sprintf(vlog, "We claim version: %s", verstring);
 	logevent(vlog);
 	strcat(verstring, "\n");
+
 	logevent("Using SSH protocol version 1");
 	sk_write(s, verstring, strlen(verstring));
 	ssh_protocol = ssh1_protocol;
@@ -1768,6 +1936,7 @@ static int ssh_closing(Plug plug, char *error_msg, int error_code,
     }
     if (error_msg) {
 	/* A socket error has occurred. */
+	logevent(error_msg);
 	connection_fatal(error_msg);
     } else {
 	/* Otherwise, the remote side closed the connection normally. */
@@ -1861,9 +2030,11 @@ static char *connect_to_host(char *host, int port, char **realhost, int nodelay)
 	sprintf(buf, "Connecting to %.100s port %d", addrbuf, port);
 	logevent(buf);
     }
-    s = sk_new(addr, port, 0, 1, nodelay, &fn_table_ptr);
-    if ((err = sk_socket_error(s)))
+    s = new_connection(addr, *realhost, port, 0, 1, nodelay, &fn_table_ptr);
+    if ((err = sk_socket_error(s))) {
+	s = NULL;
 	return err;
+    }
 
 #ifdef FWHACK
     sk_write(s, "connect ", 8);
@@ -1926,6 +2097,76 @@ static void ssh_throttle_all(int enable, int bufsize)
 	    break;
 	}
     }
+}
+
+/*
+ * Username and password input, abstracted off into reusable
+ * routines (hopefully even reusable between SSH1 and SSH2!).
+ */
+static char *ssh_userpass_input_buffer;
+static int ssh_userpass_input_buflen;
+static int ssh_userpass_input_bufpos;
+static int ssh_userpass_input_echo;
+
+/* Set up a username or password input loop on a given buffer. */
+void setup_userpass_input(char *buffer, int buflen, int echo)
+{
+    ssh_userpass_input_buffer = buffer;
+    ssh_userpass_input_buflen = buflen;
+    ssh_userpass_input_bufpos = 0;
+    ssh_userpass_input_echo = echo;
+}
+
+/*
+ * Process some terminal data in the course of username/password
+ * input. Returns >0 for success (line of input returned in
+ * buffer), <0 for failure (user hit ^C/^D, bomb out and exit), 0
+ * for inconclusive (keep waiting for more input please).
+ */
+int process_userpass_input(unsigned char *in, int inlen)
+{
+    char c;
+
+    while (inlen--) {
+	switch (c = *in++) {
+	  case 10:
+	  case 13:
+	    ssh_userpass_input_buffer[ssh_userpass_input_bufpos] = 0;
+	    ssh_userpass_input_buffer[ssh_userpass_input_buflen-1] = 0;
+	    return +1;
+	    break;
+	  case 8:
+	  case 127:
+	    if (ssh_userpass_input_bufpos > 0) {
+		if (ssh_userpass_input_echo)
+		    c_write_str("\b \b");
+		ssh_userpass_input_bufpos--;
+	    }
+	    break;
+	  case 21:
+	  case 27:
+	    while (ssh_userpass_input_bufpos > 0) {
+		if (ssh_userpass_input_echo)
+		    c_write_str("\b \b");
+		ssh_userpass_input_bufpos--;
+	    }
+	    break;
+	  case 3:
+	  case 4:
+	    return -1;
+	    break;
+	  default:
+	    if (((c >= ' ' && c <= '~') ||
+		 ((unsigned char) c >= 160))
+		&& ssh_userpass_input_bufpos < ssh_userpass_input_buflen-1) {
+		ssh_userpass_input_buffer[ssh_userpass_input_bufpos++] = c;
+		if (ssh_userpass_input_echo)
+		    c_write(&c, 1);
+	    }
+	    break;
+	}
+    }
+    return 0;
 }
 
 /*
@@ -2113,10 +2354,8 @@ static int do_ssh1_login(unsigned char *in, int inlen, int ispkt)
 
     fflush(stdout);
     {
-	static int pos = 0;
-	static char c;
 	if ((flags & FLAG_INTERACTIVE) && !*cfg.username) {
-	    if (ssh_get_line) {
+	    if (ssh_get_line && !ssh_getline_pw_only) {
 		if (!ssh_get_line("login as: ",
 				  username, sizeof(username), FALSE)) {
 		    /*
@@ -2128,52 +2367,22 @@ static int do_ssh1_login(unsigned char *in, int inlen, int ispkt)
 		    crReturn(1);
 		}
 	    } else {
+		static int ret;
 		c_write_str("login as: ");
 		ssh_send_ok = 1;
-		while (pos >= 0) {
+
+		setup_userpass_input(username, sizeof(username), 1);
+		do {
 		    crWaitUntil(!ispkt);
-		    while (inlen--)
-			switch (c = *in++) {
-			  case 10:
-			  case 13:
-			    username[pos] = 0;
-			    pos = -1;
-			    break;
-			  case 8:
-			  case 127:
-			    if (pos > 0) {
-				c_write_str("\b \b");
-				pos--;
-			    }
-			    break;
-			  case 21:
-			  case 27:
-			    while (pos > 0) {
-				c_write_str("\b \b");
-				pos--;
-			    }
-			    break;
-			  case 3:
-			  case 4:
-			    random_save_seed();
-			    exit(0);
-			    break;
-			  default:
-			    if (((c >= ' ' && c <= '~') ||
-				 ((unsigned char) c >= 160))
-				&& pos < sizeof(username)-1) {
-				username[pos++] = c;
-				c_write(&c, 1);
-			    }
-			    break;
-			}
-		}
+		    ret = process_userpass_input(in, inlen);
+		} while (ret == 0);
+		if (ret < 0)
+		    cleanup_exit(0);
 		c_write_str("\r\n");
-		username[strcspn(username, "\n\r")] = '\0';
 	    }
 	} else {
-	    strncpy(username, cfg.username, 99);
-	    username[99] = '\0';
+	    strncpy(username, cfg.username, sizeof(username));
+	    username[sizeof(username)-1] = '\0';
 	}
 
 	send_packet(SSH1_CMSG_USER, PKT_STR, username, PKT_END);
@@ -2191,7 +2400,12 @@ static int do_ssh1_login(unsigned char *in, int inlen, int ispkt)
 
     crWaitUntil(ispkt);
 
-    tried_publickey = tried_agent = 0;
+    if ((ssh_remote_bugs & BUG_CHOKES_ON_RSA)) {
+	/* We must not attempt PK auth. Pretend we've already tried it. */
+	tried_publickey = tried_agent = 1;
+    } else {
+	tried_publickey = tried_agent = 0;
+    }
     tis_auth_refused = ccard_auth_refused = 0;
     /* Load the public half of cfg.keyfile so we notice if it's in Pageant */
     if (*cfg.keyfile) {
@@ -2400,8 +2614,22 @@ static int do_ssh1_login(unsigned char *in, int inlen, int ispkt)
 	}
 	if (pwpkt_type == SSH1_CMSG_AUTH_RSA) {
 	    char *comment = NULL;
+	    int type;
+	    char msgbuf[256];
 	    if (flags & FLAG_VERBOSE)
 		c_write_str("Trying public key authentication.\r\n");
+	    sprintf(msgbuf, "Trying public key \"%.200s\"", cfg.keyfile);
+	    logevent(msgbuf);
+	    type = key_type(cfg.keyfile);
+	    if (type != SSH_KEYTYPE_SSH1) {
+		sprintf(msgbuf, "Key is of wrong type (%s)",
+			key_type_to_str(type));
+		logevent(msgbuf);
+		c_write_str(msgbuf);
+		c_write_str("\r\n");
+		tried_publickey = 1;
+		continue;
+	    }
 	    if (!rsakey_encrypted(cfg.keyfile, &comment)) {
 		if (flags & FLAG_VERBOSE)
 		    c_write_str("No passphrase required.\r\n");
@@ -2426,6 +2654,7 @@ static int do_ssh1_login(unsigned char *in, int inlen, int ispkt)
 		send_packet(SSH1_MSG_DISCONNECT,
 			    PKT_STR, "No more passwords available to try",
 			    PKT_END);
+		logevent("Unable to authenticate");
 		connection_fatal("Unable to authenticate");
 		ssh_state = SSH_STATE_CLOSED;
 		crReturn(1);
@@ -2433,38 +2662,17 @@ static int do_ssh1_login(unsigned char *in, int inlen, int ispkt)
 	} else {
 	    /* Prompt may have come from server. We've munged it a bit, so
 	     * we know it to be zero-terminated at least once. */
+	    static int ret;
 	    c_write_untrusted(prompt, strlen(prompt));
 	    pos = 0;
-	    ssh_send_ok = 1;
-	    while (pos >= 0) {
+
+	    setup_userpass_input(password, sizeof(password), 0);
+	    do {
 		crWaitUntil(!ispkt);
-		while (inlen--)
-		    switch (c = *in++) {
-		      case 10:
-		      case 13:
-			password[pos] = 0;
-			pos = -1;
-			break;
-		      case 8:
-		      case 127:
-			if (pos > 0)
-			    pos--;
-			break;
-		      case 21:
-		      case 27:
-			pos = 0;
-			break;
-		      case 3:
-		      case 4:
-			random_save_seed();
-			exit(0);
-			break;
-		      default:
-			if (pos < sizeof(password)-1)
-			    password[pos++] = c;
-			break;
-		    }
-	    }
+		ret = process_userpass_input(in, inlen);
+	    } while (ret == 0);
+	    if (ret < 0)
+		cleanup_exit(0);
 	    c_write_str("\r\n");
 	}
 
@@ -2689,7 +2897,7 @@ void sshfwd_close(struct ssh_channel *c)
 	 * on it now, and then when the server acks the channel
 	 * open, we can close it then.
 	 */
-	if (c->remoteid != -1) {
+	if (((int)c->remoteid) != -1) {
 	    if (ssh_version == 1) {
 		send_packet(SSH1_MSG_CHANNEL_CLOSE, PKT_INT, c->remoteid,
 			    PKT_END);
@@ -2699,7 +2907,7 @@ void sshfwd_close(struct ssh_channel *c)
 		ssh2_pkt_send();
 	    }
 	}
-	c->closes = 1;
+	c->closes = 1;		       /* sent MSG_CLOSE */
 	if (c->type == CHAN_X11) {
 	    c->u.x11.s = NULL;
 	    logevent("Forwarded X11 connection terminated");
@@ -2801,11 +3009,13 @@ static void ssh1_protocol(unsigned char *in, int inlen, int ispkt)
     }
 
     {
-	char type, *e;
+	char type;
+	static char *e;
 	int n;
-	int sport,dport;
+	int sport,dport,sserv,dserv;
 	char sports[256], dports[256], host[256];
 	char buf[1024];
+	struct servent *se;
 
 	ssh_rportfwds = newtree234(ssh_rportcmp_ssh1);
         /* Add port forwardings. */
@@ -2830,12 +3040,43 @@ static void ssh1_protocol(unsigned char *in, int inlen, int ispkt)
 	    dports[n] = 0;
 	    e++;
 	    dport = atoi(dports);
+	    dserv = 0;
+	    if (dport == 0) {
+		dserv = 1;
+		se = getservbyname(dports, NULL);
+		if (se != NULL) {
+		    dport = ntohs(se->s_port);
+		} else {
+		    sprintf(buf,
+			    "Service lookup failed for destination port \"%s\"",
+			    dports);
+		    logevent(buf);
+		}
+	    }
 	    sport = atoi(sports);
+	    sserv = 0;
+	    if (sport == 0) {
+		sserv = 1;
+		se = getservbyname(sports, NULL);
+		if (se != NULL) {
+		    sport = ntohs(se->s_port);
+		} else {
+		    sprintf(buf,
+			    "Service lookup failed for source port \"%s\"",
+			    sports);
+		    logevent(buf);
+		}
+	    }
 	    if (sport && dport) {
 		if (type == 'L') {
 		    pfd_addforward(host, dport, sport);
-		    sprintf(buf, "Local port %d forwarding to %s:%d",
-			    sport, host, dport);
+		    sprintf(buf, "Local port %.*s%.*s%d%.*s forwarding to"
+			    " %s:%.*s%.*s%d%.*s",
+			    sserv ? strlen(sports) : 0, sports,
+			    sserv, "(", sport, sserv, ")",
+			    host,
+			    dserv ? strlen(dports) : 0, dports,
+			    dserv, "(", dport, dserv, ")");
 		    logevent(buf);
 		} else {
 		    struct ssh_rportfwd *pf;
@@ -2849,14 +3090,31 @@ static void ssh1_protocol(unsigned char *in, int inlen, int ispkt)
 			logevent(buf);
 			sfree(pf);
 		    } else {
-			sprintf(buf, "Requesting remote port %d forward to %s:%d",
-				sport, host, dport);
+			sprintf(buf, "Requesting remote port %.*s%.*s%d%.*s"
+				" forward to %s:%.*s%.*s%d%.*s",
+			    sserv ? strlen(sports) : 0, sports,
+			    sserv, "(", sport, sserv, ")",
+			    host,
+			    dserv ? strlen(dports) : 0, dports,
+			    dserv, "(", dport, dserv, ")");
 			logevent(buf);
 			send_packet(SSH1_CMSG_PORT_FORWARD_REQUEST,
 				    PKT_INT, sport,
 				    PKT_STR, host,
 				    PKT_INT, dport,
 				    PKT_END);
+			do {
+			    crReturnV;
+			} while (!ispkt);
+			if (pktin.type != SSH1_SMSG_SUCCESS
+			    && pktin.type != SSH1_SMSG_FAILURE) {
+			    bombout(("Protocol confusion"));
+			    crReturnV;
+			} else if (pktin.type == SSH1_SMSG_FAILURE) {
+			    c_write_str("Server refused port forwarding\r\n");
+			    ssh_editing = ssh_echoing = 1;
+			}
+			logevent("Remote port forwarding enabled");
 		    }
 		}
 	    }
@@ -3105,13 +3363,11 @@ static void ssh1_protocol(unsigned char *in, int inlen, int ispkt)
 		unsigned i = GET_32BIT(pktin.body);
 		struct ssh_channel *c;
 		c = find234(ssh_channels, &i, ssh_channelfind);
-		if (c) {
+		if (c && ((int)c->remoteid) != -1) {
 		    int closetype;
 		    closetype =
 			(pktin.type == SSH1_MSG_CHANNEL_CLOSE ? 1 : 2);
-		    if (!(c->closes & closetype))
-			send_packet(pktin.type, PKT_INT, c->remoteid,
-				    PKT_END);
+
 		    if ((c->closes == 0) && (c->type == CHAN_X11)) {
 			logevent("Forwarded X11 connection terminated");
 			assert(c->u.x11.s != NULL);
@@ -3124,11 +3380,23 @@ static void ssh1_protocol(unsigned char *in, int inlen, int ispkt)
 			pfd_close(c->u.pfd.s);
 			c->u.pfd.s = NULL;
 		    }
-		    c->closes |= closetype;
-		    if (c->closes == 3) {
+
+		    c->closes |= (closetype << 2);   /* seen this message */
+		    if (!(c->closes & closetype)) {
+			send_packet(pktin.type, PKT_INT, c->remoteid,
+				    PKT_END);
+			c->closes |= closetype;      /* sent it too */
+		    }
+
+		    if (c->closes == 15) {
 			del234(ssh_channels, c);
 			sfree(c);
 		    }
+		} else {
+		    bombout(("Received CHANNEL_CLOSE%s for %s channel %d\n",
+			     pktin.type == SSH1_MSG_CHANNEL_CLOSE ? "" :
+			     "_CONFIRMATION", c ? "half-open" : "nonexistent",
+			     i));
 		}
 	    } else if (pktin.type == SSH1_MSG_CHANNEL_DATA) {
 		/* Data sent down one of our channels. */
@@ -3281,14 +3549,16 @@ static void ssh2_mkkey(Bignum K, char *H, char *sessid, char chr,
     SHA_State s;
     /* First 20 bytes. */
     SHA_Init(&s);
-    sha_mpint(&s, K);
+    if (!(ssh_remote_bugs & BUG_SSH2_DERIVEKEY))
+	sha_mpint(&s, K);
     SHA_Bytes(&s, H, 20);
     SHA_Bytes(&s, &chr, 1);
     SHA_Bytes(&s, sessid, 20);
     SHA_Final(&s, keyspace);
     /* Next 20 bytes. */
     SHA_Init(&s);
-    sha_mpint(&s, K);
+    if (!(ssh_remote_bugs & BUG_SSH2_DERIVEKEY))
+	sha_mpint(&s, K);
     SHA_Bytes(&s, H, 20);
     SHA_Bytes(&s, keyspace, 20);
     SHA_Final(&s, keyspace + 20);
@@ -3372,7 +3642,7 @@ static int do_ssh2_transport(unsigned char *in, int inlen, int ispkt)
     /*
      * Be prepared to work around the buggy MAC problem.
      */
-    if (cfg.buggymac || (ssh_remote_bugs & BUG_SSH2_HMAC))
+    if (ssh_remote_bugs & BUG_SSH2_HMAC)
 	maclist = buggymacs, nmacs = lenof(buggymacs);
     else
 	maclist = macs, nmacs = lenof(macs);
@@ -3387,6 +3657,9 @@ static int do_ssh2_transport(unsigned char *in, int inlen, int ispkt)
     /* List key exchange algorithms. */
     ssh2_pkt_addstring_start();
     for (i = 0; i < lenof(kex_algs); i++) {
+	if (kex_algs[i] == &ssh_diffiehellman_gex &&
+	    (ssh_remote_bugs & BUG_SSH2_DH_GEX))
+	    continue;
 	ssh2_pkt_addstring_str(kex_algs[i]->name);
 	if (i < lenof(kex_algs) - 1)
 	    ssh2_pkt_addstring_str(",");
@@ -3493,6 +3766,9 @@ static int do_ssh2_transport(unsigned char *in, int inlen, int ispkt)
     pktin.savedpos += 16;	       /* skip garbage cookie */
     ssh2_pkt_getstring(&str, &len);    /* key exchange algorithms */
     for (i = 0; i < lenof(kex_algs); i++) {
+	if (kex_algs[i] == &ssh_diffiehellman_gex &&
+	    (ssh_remote_bugs & BUG_SSH2_DH_GEX))
+	    continue;
 	if (in_commasep_string(kex_algs[i]->name, str, len)) {
 	    kex = kex_algs[i];
 	    break;
@@ -3855,8 +4131,9 @@ static void do_ssh2_authconn(unsigned char *in, int inlen, int ispkt)
     static int tried_pubkey_config, tried_agent, tried_keyb_inter;
     static int kbd_inter_running;
     static int we_are_in;
-    static int num_prompts, echo;
+    static int num_prompts, curr_prompt, echo;
     static char username[100];
+    static int got_username;
     static char pwprompt[200];
     static char password[100];
     static void *publickey_blob;
@@ -3901,22 +4178,19 @@ static void do_ssh2_authconn(unsigned char *in, int inlen, int ispkt)
      *    retype it!
      */
     username[0] = '\0';
+    got_username = FALSE;
     do {
-	static int pos;
-	static char c;
-
 	/*
 	 * Get a username.
 	 */
-	pos = 0;
-	if (*username && !cfg.change_username) {
+	if (got_username && !cfg.change_username) {
 	    /*
 	     * We got a username last time round this loop, and
 	     * with change_username turned off we don't try to get
 	     * it again.
 	     */
 	} else if ((flags & FLAG_INTERACTIVE) && !*cfg.username) {
-	    if (ssh_get_line) {
+	    if (ssh_get_line && !ssh_getline_pw_only) {
 		if (!ssh_get_line("login as: ",
 				  username, sizeof(username), FALSE)) {
 		    /*
@@ -3928,58 +4202,29 @@ static void do_ssh2_authconn(unsigned char *in, int inlen, int ispkt)
 		    crReturnV;
 		}
 	    } else {
+		static int ret;
 		c_write_str("login as: ");
 		ssh_send_ok = 1;
-		while (pos >= 0) {
+		setup_userpass_input(username, sizeof(username), 1);
+		do {
 		    crWaitUntilV(!ispkt);
-		    while (inlen--)
-			switch (c = *in++) {
-			  case 10:
-			  case 13:
-			    username[pos] = 0;
-			    pos = -1;
-			    break;
-			  case 8:
-			  case 127:
-			    if (pos > 0) {
-				c_write_str("\b \b");
-				pos--;
-			    }
-			    break;
-			  case 21:
-			  case 27:
-			    while (pos > 0) {
-				c_write_str("\b \b");
-				pos--;
-			    }
-			    break;
-			  case 3:
-			  case 4:
-			    random_save_seed();
-			    exit(0);
-			    break;
-			  default:
-			    if (((c >= ' ' && c <= '~') ||
-				 ((unsigned char) c >= 160))
-				&& pos < sizeof(username)-1) {
-				username[pos++] = c;
-				c_write(&c, 1);
-			    }
-			    break;
-			}
-		}
+		    ret = process_userpass_input(in, inlen);
+		} while (ret == 0);
+		if (ret < 0)
+		    cleanup_exit(0);
 	    }
 	    c_write_str("\r\n");
 	    username[strcspn(username, "\n\r")] = '\0';
 	} else {
 	    char stuff[200];
-	    strncpy(username, cfg.username, 99);
-	    username[99] = '\0';
+	    strncpy(username, cfg.username, sizeof(username));
+	    username[sizeof(username)-1] = '\0';
 	    if ((flags & FLAG_VERBOSE) || (flags & FLAG_INTERACTIVE)) {
 		sprintf(stuff, "Using username \"%s\".\r\n", username);
 		c_write_str(stuff);
 	    }
 	}
+	got_username = TRUE;
 
 	/*
 	 * Send an authentication request using method "none": (a)
@@ -4003,8 +4248,21 @@ static void do_ssh2_authconn(unsigned char *in, int inlen, int ispkt)
 	kbd_inter_running = FALSE;
 	/* Load the pub half of cfg.keyfile so we notice if it's in Pageant */
 	if (*cfg.keyfile) {
-	    publickey_blob = ssh2_userkey_loadpub(cfg.keyfile, NULL,
-						  &publickey_bloblen);
+	    int keytype;
+	    logeventf("Reading private key file \"%.150s\"", cfg.keyfile);
+	    keytype = key_type(cfg.keyfile);
+	    if (keytype == SSH_KEYTYPE_SSH2)
+		publickey_blob = ssh2_userkey_loadpub(cfg.keyfile, NULL,
+						      &publickey_bloblen);
+	    else {
+		char msgbuf[256];
+		logeventf("Unable to use this key file (%s)",
+			key_type_to_str(keytype));
+		sprintf(msgbuf, "Unable to use key file \"%.150s\" (%s)\r\n",
+			cfg.keyfile, key_type_to_str(keytype));
+		c_write_str(msgbuf);
+		publickey_blob = NULL;
+	    }
 	} else
 	    publickey_blob = NULL;
 
@@ -4041,9 +4299,14 @@ static void do_ssh2_authconn(unsigned char *in, int inlen, int ispkt)
 	    if (kbd_inter_running &&
 		pktin.type == SSH2_MSG_USERAUTH_INFO_REQUEST) {
 		/*
-		 * This is a further prompt in keyboard-interactive
-		 * authentication. Do nothing.
+		 * This is either a further set-of-prompts packet
+		 * in keyboard-interactive authentication, or it's
+		 * the same one and we came back here with `gotit'
+		 * set. In the former case, we must reset the
+		 * curr_prompt variable.
 		 */
+		if (!gotit)
+		    curr_prompt = 0;
 	    } else if (pktin.type != SSH2_MSG_USERAUTH_FAILURE) {
 		bombout(("Strange packet received during authentication: type %d",
 			 pktin.type));
@@ -4117,6 +4380,14 @@ static void do_ssh2_authconn(unsigned char *in, int inlen, int ispkt)
 	    method = 0;
 	    ssh_pkt_ctx &= ~SSH2_PKTCTX_AUTH_MASK;
 
+	    /*
+	     * Most password/passphrase prompts will be
+	     * non-echoing, so we set this to 0 by default.
+	     * Exception is that some keyboard-interactive prompts
+	     * can be echoing, in which case we'll set this to 1.
+	     */
+	    echo = 0;
+
 	    if (!method && can_pubkey && agent_exists() && !tried_agent) {
 		/*
 		 * Attempt public-key authentication using Pageant.
@@ -4127,6 +4398,7 @@ static void do_ssh2_authconn(unsigned char *in, int inlen, int ispkt)
 		static int authed = FALSE;
 		void *r;
 
+		ssh_pkt_ctx &= ~SSH2_PKTCTX_AUTH_MASK;
 		ssh_pkt_ctx |= SSH2_PKTCTX_PUBLICKEY;
 
 		tried_agent = TRUE;
@@ -4244,10 +4516,8 @@ static void do_ssh2_authconn(unsigned char *in, int inlen, int ispkt)
 			if (ret) {
 			    if (ret[4] == SSH2_AGENT_SIGN_RESPONSE) {
 				logevent("Sending Pageant's response");
-				ssh2_pkt_addstring_start();
-				ssh2_pkt_addstring_data(ret + 9,
-							GET_32BIT(ret +
-								  5));
+				ssh2_add_sigblob(pkblob, pklen,
+						 ret + 9, GET_32BIT(ret + 5));
 				ssh2_pkt_send();
 				authed = TRUE;
 				break;
@@ -4263,7 +4533,7 @@ static void do_ssh2_authconn(unsigned char *in, int inlen, int ispkt)
 		}
 	    }
 
-	    if (!method && can_pubkey && *cfg.keyfile
+	    if (!method && can_pubkey && publickey_blob
 		&& !tried_pubkey_config) {
 		unsigned char *pub_blob;
 		char *algorithm, *comment;
@@ -4271,6 +4541,7 @@ static void do_ssh2_authconn(unsigned char *in, int inlen, int ispkt)
 
 		tried_pubkey_config = TRUE;
 
+		ssh_pkt_ctx &= ~SSH2_PKTCTX_AUTH_MASK;
 		ssh_pkt_ctx |= SSH2_PKTCTX_PUBLICKEY;
 
 		/*
@@ -4325,6 +4596,7 @@ static void do_ssh2_authconn(unsigned char *in, int inlen, int ispkt)
 		type = AUTH_TYPE_KEYBOARD_INTERACTIVE;
 		tried_keyb_inter = TRUE;
 
+		ssh_pkt_ctx &= ~SSH2_PKTCTX_AUTH_MASK;
 		ssh_pkt_ctx |= SSH2_PKTCTX_KBDINTER;
 
 		ssh2_pkt_init(SSH2_MSG_USERAUTH_REQUEST);
@@ -4345,6 +4617,7 @@ static void do_ssh2_authconn(unsigned char *in, int inlen, int ispkt)
 		}
 
 		kbd_inter_running = TRUE;
+		curr_prompt = 0;
 	    }
 
 	    if (kbd_inter_running) {
@@ -4352,34 +4625,58 @@ static void do_ssh2_authconn(unsigned char *in, int inlen, int ispkt)
 		type = AUTH_TYPE_KEYBOARD_INTERACTIVE;
 		tried_keyb_inter = TRUE;
 
+		ssh_pkt_ctx &= ~SSH2_PKTCTX_AUTH_MASK;
 		ssh_pkt_ctx |= SSH2_PKTCTX_KBDINTER;
 
-		/* We've got packet with that "interactive" info
-		   dump banners, and set its prompt as ours */
-		{
-		    char *name, *inst, *lang, *prompt;
-		    int name_len, inst_len, lang_len, prompt_len;
+		if (curr_prompt == 0) {
+		    /*
+		     * We've got a fresh USERAUTH_INFO_REQUEST.
+		     * Display header data, and start going through
+		     * the prompts.
+		     */
+		    char *name, *inst, *lang;
+		    int name_len, inst_len, lang_len;
+
 		    ssh2_pkt_getstring(&name, &name_len);
 		    ssh2_pkt_getstring(&inst, &inst_len);
 		    ssh2_pkt_getstring(&lang, &lang_len);
-		    if (name_len > 0)
+		    if (name_len > 0) {
 			c_write_untrusted(name, name_len);
-		    if (inst_len > 0)
+			c_write_str("\r\n");
+		    }
+		    if (inst_len > 0) {
 			c_write_untrusted(inst, inst_len);
+			c_write_str("\r\n");
+		    }
 		    num_prompts = ssh2_pkt_getuint32();
+		}
+
+		/*
+		 * If there are prompts remaining in the packet,
+		 * display one and get a response.
+		 */
+		if (curr_prompt < num_prompts) {
+		    char *prompt;
+		    int prompt_len;
 
 		    ssh2_pkt_getstring(&prompt, &prompt_len);
-		    strncpy(pwprompt, prompt, sizeof(pwprompt));
-		    pwprompt[prompt_len < sizeof(pwprompt) ?
-			     prompt_len : sizeof(pwprompt)-1] = '\0';
-		    need_pw = TRUE;
-
+		    if (prompt_len > 0) {
+			strncpy(pwprompt, prompt, sizeof(pwprompt));
+			pwprompt[prompt_len < sizeof(pwprompt) ?
+				 prompt_len : sizeof(pwprompt)-1] = '\0';
+		    } else {
+			strcpy(pwprompt,
+			       "<server failed to send prompt>: ");
+		    }
 		    echo = ssh2_pkt_getbool();
-		}
+		    need_pw = TRUE;
+		} else
+		    need_pw = FALSE;
 	    }
 
 	    if (!method && can_passwd) {
 		method = AUTH_PASSWORD;
+		ssh_pkt_ctx &= ~SSH2_PKTCTX_AUTH_MASK;
 		ssh_pkt_ctx |= SSH2_PKTCTX_PASSWORD;
 		sprintf(pwprompt, "%.90s@%.90s's password: ", username,
 			savedhost);
@@ -4402,47 +4699,23 @@ static void do_ssh2_authconn(unsigned char *in, int inlen, int ispkt)
 			    ("No more passwords available to try");
 			ssh2_pkt_addstring("en");	/* language tag */
 			ssh2_pkt_send();
+			logevent("Unable to authenticate");
 			connection_fatal("Unable to authenticate");
 			ssh_state = SSH_STATE_CLOSED;
 			crReturnV;
 		    }
 		} else {
-		    static int pos = 0;
-		    static char c;
-
+		    static int ret;
 		    c_write_untrusted(pwprompt, strlen(pwprompt));
 		    ssh_send_ok = 1;
 
-		    pos = 0;
-		    while (pos >= 0) {
+		    setup_userpass_input(password, sizeof(password), echo);
+		    do {
 			crWaitUntilV(!ispkt);
-			while (inlen--)
-			    switch (c = *in++) {
-			      case 10:
-			      case 13:
-				password[pos] = 0;
-				pos = -1;
-				break;
-			      case 8:
-			      case 127:
-				if (pos > 0)
-				    pos--;
-				break;
-			      case 21:
-			      case 27:
-				pos = 0;
-				break;
-			      case 3:
-			      case 4:
-				random_save_seed();
-				exit(0);
-				break;
-			      default:
-				if (pos < sizeof(password)-1)
-				    password[pos++] = c;
-				break;
-			    }
-		    }
+			ret = process_userpass_input(in, inlen);
+		    } while (ret == 0);
+		    if (ret < 0)
+			cleanup_exit(0);
 		    c_write_str("\r\n");
 		}
 	    }
@@ -4470,8 +4743,8 @@ static void do_ssh2_authconn(unsigned char *in, int inlen, int ispkt)
 		    ssh2_pkt_send();
 		    type = AUTH_TYPE_NONE;
 		} else {
-		    unsigned char *blob, *sigdata;
-		    int blob_len, sigdata_len;
+		    unsigned char *pkblob, *sigblob, *sigdata;
+		    int pkblob_len, sigblob_len, sigdata_len;
 
 		    /*
 		     * We have loaded the private key and the server
@@ -4484,10 +4757,9 @@ static void do_ssh2_authconn(unsigned char *in, int inlen, int ispkt)
 		    ssh2_pkt_addstring("publickey");	/* method */
 		    ssh2_pkt_addbool(TRUE);
 		    ssh2_pkt_addstring(key->alg->name);
-		    blob = key->alg->public_blob(key->data, &blob_len);
+		    pkblob = key->alg->public_blob(key->data, &pkblob_len);
 		    ssh2_pkt_addstring_start();
-		    ssh2_pkt_addstring_data(blob, blob_len);
-		    sfree(blob);
+		    ssh2_pkt_addstring_data(pkblob, pkblob_len);
 
 		    /*
 		     * The data to be signed is:
@@ -4503,12 +4775,12 @@ static void do_ssh2_authconn(unsigned char *in, int inlen, int ispkt)
 		    memcpy(sigdata + 4, ssh2_session_id, 20);
 		    memcpy(sigdata + 24, pktout.data + 5,
 			   pktout.length - 5);
-		    blob =
-			key->alg->sign(key->data, sigdata, sigdata_len,
-				       &blob_len);
-		    ssh2_pkt_addstring_start();
-		    ssh2_pkt_addstring_data(blob, blob_len);
-		    sfree(blob);
+		    sigblob = key->alg->sign(key->data, sigdata,
+					     sigdata_len, &sigblob_len);
+		    ssh2_add_sigblob(pkblob, pkblob_len,
+				     sigblob, sigblob_len);
+		    sfree(pkblob);
+		    sfree(sigblob);
 		    sfree(sigdata);
 
 		    ssh2_pkt_send();
@@ -4572,11 +4844,28 @@ static void do_ssh2_authconn(unsigned char *in, int inlen, int ispkt)
 		logevent("Sent password");
 		type = AUTH_TYPE_PASSWORD;
 	    } else if (method == AUTH_KEYBOARD_INTERACTIVE) {
-                ssh2_pkt_init(SSH2_MSG_USERAUTH_INFO_RESPONSE);
-                ssh2_pkt_adduint32(num_prompts);
-                ssh2_pkt_addstring(password);
-                memset(password, 0, sizeof(password));
-                ssh2_pkt_send();
+		if (curr_prompt == 0) {
+		    ssh2_pkt_init(SSH2_MSG_USERAUTH_INFO_RESPONSE);
+		    ssh2_pkt_adduint32(num_prompts);
+		}
+		if (need_pw) {	       /* only add pw if we just got one! */
+		    ssh2_pkt_addstring(password);
+		    memset(password, 0, sizeof(password));
+		    curr_prompt++;
+		}
+		if (curr_prompt >= num_prompts) {
+		    ssh2_pkt_send();
+		} else {
+		    /*
+		     * If there are prompts remaining, we set
+		     * `gotit' so that we won't attempt to get
+		     * another packet. Then we go back round the
+		     * loop and will end up retrieving another
+		     * prompt out of the existing packet. Funky or
+		     * what?
+		     */
+		    gotit = TRUE;
+		}
 		type = AUTH_TYPE_KEYBOARD_INTERACTIVE;
 	    } else {
 		c_write_str
@@ -4682,9 +4971,10 @@ static void do_ssh2_authconn(unsigned char *in, int inlen, int ispkt)
 	static char *e;		       /* preserve across crReturn */
 	char type;
 	int n;
-	int sport,dport;
+	int sport,dport,sserv,dserv;
 	char sports[256], dports[256], host[256];
 	char buf[1024];
+	struct servent *se;
 
 	ssh_rportfwds = newtree234(ssh_rportcmp_ssh2);
         /* Add port forwardings. */
@@ -4709,12 +4999,43 @@ static void do_ssh2_authconn(unsigned char *in, int inlen, int ispkt)
 	    dports[n] = 0;
 	    e++;
 	    dport = atoi(dports);
+	    dserv = 0;
+	    if (dport == 0) {
+		dserv = 1;
+		se = getservbyname(dports, NULL);
+		if (se != NULL) {
+		    dport = ntohs(se->s_port);
+		} else {
+		    sprintf(buf,
+			    "Service lookup failed for destination port \"%s\"",
+			    dports);
+		    logevent(buf);
+		}
+	    }
 	    sport = atoi(sports);
+	    sserv = 0;
+	    if (sport == 0) {
+		sserv = 1;
+		se = getservbyname(sports, NULL);
+		if (se != NULL) {
+		    sport = ntohs(se->s_port);
+		} else {
+		    sprintf(buf,
+			    "Service lookup failed for source port \"%s\"",
+			    sports);
+		    logevent(buf);
+		}
+	    }
 	    if (sport && dport) {
 		if (type == 'L') {
 		    pfd_addforward(host, dport, sport);
-		    sprintf(buf, "Local port %d forwarding to %s:%d",
-			    sport, host, dport);
+		    sprintf(buf, "Local port %.*s%.*s%d%.*s forwarding to"
+			    " %s:%.*s%.*s%d%.*s",
+			    sserv ? strlen(sports) : 0, sports,
+			    sserv, "(", sport, sserv, ")",
+			    host,
+			    dserv ? strlen(dports) : 0, dports,
+			    dserv, "(", dport, dserv, ")");
 		    logevent(buf);
 		} else {
 		    struct ssh_rportfwd *pf;
@@ -4729,8 +5050,13 @@ static void do_ssh2_authconn(unsigned char *in, int inlen, int ispkt)
 			logevent(buf);
 			sfree(pf);
 		    } else {
-			sprintf(buf, "Requesting remote port %d (forwarded to %s:%d)",
-				sport, host, dport);
+			sprintf(buf, "Requesting remote port %.*s%.*s%d%.*s"
+				" forward to %s:%.*s%.*s%d%.*s",
+			    sserv ? strlen(sports) : 0, sports,
+			    sserv, "(", sport, sserv, ")",
+			    host,
+			    dserv ? strlen(dports) : 0, dports,
+			    dserv, "(", dport, dserv, ")");
 			logevent(buf);
 			ssh2_pkt_init(SSH2_MSG_GLOBAL_REQUEST);
 			ssh2_pkt_addstring("tcpip-forward");
@@ -5053,8 +5379,10 @@ static void do_ssh2_authconn(unsigned char *in, int inlen, int ispkt)
 		struct ssh_channel *c;
 
 		c = find234(ssh_channels, &i, ssh_channelfind);
-		if (!c)
-		    continue;	       /* nonexistent channel */
+		if (!c || ((int)c->remoteid) == -1) {
+		    bombout(("Received CHANNEL_CLOSE for %s channel %d\n",
+			     c ? "half-open" : "nonexistent", i));
+		}
 		/* Do pre-close processing on the channel. */
 		switch (c->type) {
 		  case CHAN_MAINSESSION:
@@ -5129,7 +5457,6 @@ static void do_ssh2_authconn(unsigned char *in, int inlen, int ispkt)
 		c->type = CHAN_SOCKDATA;
 		c->v.v2.remwindow = ssh2_pkt_getuint32();
 		c->v.v2.remmaxpkt = ssh2_pkt_getuint32();
-		bufchain_init(&c->v.v2.outbuffer);
 		if (c->u.pfd.s)
 		    pfd_confirm(c->u.pfd.s);
 		if (c->closes) {
@@ -5183,7 +5510,7 @@ static void do_ssh2_authconn(unsigned char *in, int inlen, int ispkt)
 		    ssh2_pkt_addstring(buf);
 		    ssh2_pkt_addstring("en");	/* language tag */
 		    ssh2_pkt_send();
-		    connection_fatal(buf);
+		    connection_fatal("%s", buf);
 		    ssh_state = SSH_STATE_CLOSED;
 		    crReturnV;
 		}
@@ -5509,7 +5836,8 @@ static void ssh_special(Telnet_Special code)
 	if (ssh_state == SSH_STATE_CLOSED
 	    || ssh_state == SSH_STATE_PREPACKET) return;
 	if (ssh_version == 1) {
-	    send_packet(SSH1_MSG_IGNORE, PKT_STR, "", PKT_END);
+	    if (!(ssh_remote_bugs & BUG_CHOKES_ON_SSH1_IGNORE))
+		send_packet(SSH1_MSG_IGNORE, PKT_STR, "", PKT_END);
 	} else {
 	    ssh2_pkt_init(SSH2_MSG_IGNORE);
 	    ssh2_pkt_addstring_start();
@@ -5531,6 +5859,7 @@ void *new_sock_channel(Socket s)
 	c->closes = 0;
 	c->type = CHAN_SOCKDATA_DORMANT;/* identify channel type */
 	c->u.pfd.s = s;
+	bufchain_init(&c->v.v2.outbuffer);
 	add234(ssh_channels, c);
     }
     return c;

@@ -124,6 +124,18 @@ void sk_init(void)
     sktree = newtree234(cmpfortree);
 }
 
+void sk_cleanup(void)
+{
+    Actual_Socket s;
+    int i;
+
+    if (sktree) {
+	for (i = 0; (s = index234(sktree, i)) != NULL; i++) {
+	    closesocket(s->s);
+	}
+    }
+}
+
 char *winsock_error_string(int error)
 {
     switch (error) {
@@ -356,6 +368,26 @@ void sk_getaddr(SockAddr addr, char *buf, int buflen)
 #endif
 }
 
+int sk_addrtype(SockAddr addr)
+{
+    return addr->family;
+}
+
+void sk_addrcopy(SockAddr addr, char *buf)
+{
+#ifdef IPV6
+    if (addr->family == AF_INET) {
+#endif
+	struct in_addr a;
+	a.s_addr = htonl(addr->address);
+	memcpy(buf, (char*) &a.s_addr, 4);
+#ifdef IPV6
+    } else {
+	memcpy(buf, (char*) addr->ai, 16);
+    }
+#endif
+}
+
 void sk_addr_free(SockAddr addr)
 {
     sfree(addr);
@@ -381,6 +413,9 @@ static void sk_tcp_flush(Socket s)
 static void sk_tcp_close(Socket s);
 static int sk_tcp_write(Socket s, char *data, int len);
 static int sk_tcp_write_oob(Socket s, char *data, int len);
+static void sk_tcp_set_private_ptr(Socket s, void *ptr);
+static void *sk_tcp_get_private_ptr(Socket s);
+static void sk_tcp_set_frozen(Socket s, int is_frozen);
 static char *sk_tcp_socket_error(Socket s);
 
 extern char *do_select(SOCKET skt, int startup);
@@ -393,6 +428,9 @@ Socket sk_register(void *sock, Plug plug)
 	sk_tcp_write,
 	sk_tcp_write_oob,
 	sk_tcp_flush,
+	sk_tcp_set_private_ptr,
+	sk_tcp_get_private_ptr,
+	sk_tcp_set_frozen,
 	sk_tcp_socket_error
     };
 
@@ -447,6 +485,9 @@ Socket sk_new(SockAddr addr, int port, int privport, int oobinline,
 	sk_tcp_write,
 	sk_tcp_write_oob,
 	sk_tcp_flush,
+	sk_tcp_set_private_ptr,
+	sk_tcp_get_private_ptr,
+	sk_tcp_set_frozen,
 	sk_tcp_socket_error
     };
 
@@ -621,6 +662,9 @@ Socket sk_newlistener(int port, Plug plug, int local_host_only)
 	sk_tcp_write,
 	sk_tcp_write_oob,
 	sk_tcp_flush,
+	sk_tcp_set_private_ptr,
+	sk_tcp_get_private_ptr,
+	sk_tcp_set_frozen,
 	sk_tcp_socket_error
     };
 
@@ -789,7 +833,8 @@ void try_send(Actual_Socket s)
 		s->pending_error = err;
 		return;
 	    } else {
-		fatalbox(winsock_error_string(err));
+		logevent(winsock_error_string(err));
+		fatalbox("%s", winsock_error_string(err));
 	    }
 	} else {
 	    if (s->sending_oob) {
@@ -925,8 +970,10 @@ int select_result(WPARAM wParam, LPARAM lParam)
 	ret = recv(s->s, buf, sizeof(buf), MSG_OOB);
 	noise_ultralight(ret);
 	if (ret <= 0) {
-	    fatalbox(ret == 0 ? "Internal networking trouble" :
-		     winsock_error_string(WSAGetLastError()));
+	    char *str = (ret == 0 ? "Internal networking trouble" :
+			 winsock_error_string(WSAGetLastError()));
+	    logevent(str);
+	    fatalbox("%s", str);
 	} else {
 	    return plug_receive(s->plug, 2, buf, ret);
 	}
@@ -1031,13 +1078,13 @@ void net_pending_errors(void)
  * Each socket abstraction contains a `void *' private field in
  * which the client can keep state.
  */
-void sk_set_private_ptr(Socket sock, void *ptr)
+static void sk_tcp_set_private_ptr(Socket sock, void *ptr)
 {
     Actual_Socket s = (Actual_Socket) sock;
     s->private_ptr = ptr;
 }
 
-void *sk_get_private_ptr(Socket sock)
+static void *sk_tcp_get_private_ptr(Socket sock)
 {
     Actual_Socket s = (Actual_Socket) sock;
     return s->private_ptr;
@@ -1058,7 +1105,7 @@ static char *sk_tcp_socket_error(Socket sock)
     return s->error;
 }
 
-void sk_set_frozen(Socket sock, int is_frozen)
+static void sk_tcp_set_frozen(Socket sock, int is_frozen)
 {
     Actual_Socket s = (Actual_Socket) sock;
     if (s->frozen == is_frozen)
