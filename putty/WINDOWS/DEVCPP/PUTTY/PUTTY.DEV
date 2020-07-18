@@ -12,7 +12,7 @@ CppCompiler=-W -D__GNUWIN32__ -DWIN32 -DNDEBUG -D_WINDOWS -DNO_MULTIMON -D_MBCS_
 Includes=..\..\..\.;..\..\..\charset;..\..\..\windows;..\..\..\unix;..\..\..\macosx
 Linker=-ladvapi32 -lcomctl32 -lcomdlg32 -lgdi32 -limm32 -lshell32 -luser32 -lwinmm -lwinspool_@@_
 Libs=
-UnitCount=105
+UnitCount=106
 Folders="Header Files","Resource Files","Source Files"
 ObjFiles=
 PrivateResource=putty_private.rc
@@ -933,7 +933,7 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit91]
-FileName=..\..\..\sshgss.h
+FileName=..\..\..\sshbn.h
 Folder=Header Files
 Compile=1
 CompileCpp=1
@@ -943,7 +943,7 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit92]
-FileName=..\..\..\sshgssc.h
+FileName=..\..\..\sshgss.h
 Folder=Header Files
 Compile=1
 CompileCpp=1
@@ -953,7 +953,7 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit93]
-FileName=..\..\..\storage.h
+FileName=..\..\..\sshgssc.h
 Folder=Header Files
 Compile=1
 CompileCpp=1
@@ -963,7 +963,7 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit94]
-FileName=..\..\..\terminal.h
+FileName=..\..\..\storage.h
 Folder=Header Files
 Compile=1
 CompileCpp=1
@@ -973,7 +973,7 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit95]
-FileName=..\..\..\tree234.h
+FileName=..\..\..\terminal.h
 Folder=Header Files
 Compile=1
 CompileCpp=1
@@ -983,7 +983,7 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit96]
-FileName=..\..\..\unix\unix.h
+FileName=..\..\..\tree234.h
 Folder=Header Files
 Compile=1
 CompileCpp=1
@@ -993,7 +993,7 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit97]
-FileName=..\..\..\version.h
+FileName=..\..\..\unix\unix.h
 Folder=Header Files
 Compile=1
 CompileCpp=1
@@ -1003,7 +1003,7 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit98]
-FileName=..\..\..\windows\rcstuff.h
+FileName=..\..\..\version.h
 Folder=Header Files
 Compile=1
 CompileCpp=1
@@ -1013,7 +1013,7 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit99]
-FileName=..\..\..\windows\win_res.h
+FileName=..\..\..\windows\rcstuff.h
 Folder=Header Files
 Compile=1
 CompileCpp=1
@@ -1023,7 +1023,7 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit100]
-FileName=..\..\..\windows\winhelp.h
+FileName=..\..\..\windows\win_res.h
 Folder=Header Files
 Compile=1
 CompileCpp=1
@@ -1033,7 +1033,7 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit101]
-FileName=..\..\..\windows\winsecur.h
+FileName=..\..\..\windows\winhelp.h
 Folder=Header Files
 Compile=1
 CompileCpp=1
@@ -1043,7 +1043,7 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit102]
-FileName=..\..\..\windows\winstuff.h
+FileName=..\..\..\windows\winsecur.h
 Folder=Header Files
 Compile=1
 CompileCpp=1
@@ -1053,6 +1053,16 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit103]
+FileName=..\..\..\windows\winstuff.h
+Folder=Header Files
+Compile=1
+CompileCpp=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit104]
 FileName=..\..\..\windows\putty.ico
 Folder=Resource Files
 Compile=0
@@ -1062,7 +1072,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit104]
+[Unit105]
 FileName=..\..\..\windows\putty.rc
 Folder=Resource Files
 Compile=1
@@ -1072,7 +1082,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit105]
+[Unit106]
 FileName=..\..\..\windows\puttycfg.ico
 Folder=Resource Files
 Compile=0

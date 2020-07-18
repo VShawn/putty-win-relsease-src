@@ -127,9 +127,9 @@ plink: be_all_s.o callback.o cmdline.o conf.o cproxy.o ldisc.o logging.o \
 		sshgssc.o sshmd5.o sshpubk.o sshrand.o sshrsa.o sshsh256.o \
 		sshsh512.o sshsha.o sshshare.o sshzlib.o telnet.o time.o \
 		timing.o tree234.o ux_x11.o uxagentc.o uxcons.o uxgss.o \
-		uxmisc.o uxnet.o uxnoise.o uxplink.o uxproxy.o uxsel.o \
-		uxser.o uxshare.o uxsignal.o uxstore.o version.o wildcard.o \
-		x11fwd.o
+		uxmisc.o uxnet.o uxnoise.o uxpeer.o uxplink.o uxproxy.o \
+		uxsel.o uxser.o uxshare.o uxsignal.o uxstore.o version.o \
+		wildcard.o x11fwd.o
 	$(CC) -o $@ be_all_s.o callback.o cmdline.o conf.o cproxy.o ldisc.o \
 		logging.o misc.o noterm.o pgssapi.o pinger.o portfwd.o \
 		proxy.o raw.o rlogin.o settings.o ssh.o sshaes.o ssharcf.o \
@@ -137,9 +137,9 @@ plink: be_all_s.o callback.o cmdline.o conf.o cproxy.o ldisc.o logging.o \
 		sshdss.o sshgssc.o sshmd5.o sshpubk.o sshrand.o sshrsa.o \
 		sshsh256.o sshsh512.o sshsha.o sshshare.o sshzlib.o telnet.o \
 		time.o timing.o tree234.o ux_x11.o uxagentc.o uxcons.o \
-		uxgss.o uxmisc.o uxnet.o uxnoise.o uxplink.o uxproxy.o \
-		uxsel.o uxser.o uxshare.o uxsignal.o uxstore.o version.o \
-		wildcard.o x11fwd.o $(ULDFLAGS) 
+		uxgss.o uxmisc.o uxnet.o uxnoise.o uxpeer.o uxplink.o \
+		uxproxy.o uxsel.o uxser.o uxshare.o uxsignal.o uxstore.o \
+		version.o wildcard.o x11fwd.o $(ULDFLAGS) 
 
 pscp: be_ssh.o callback.o cmdline.o conf.o cproxy.o int64.o logging.o misc.o \
 		pgssapi.o pinger.o portfwd.o proxy.o pscp.o settings.o \
@@ -147,9 +147,9 @@ pscp: be_ssh.o callback.o cmdline.o conf.o cproxy.o int64.o logging.o misc.o \
 		sshcrcda.o sshdes.o sshdh.o sshdss.o sshgssc.o sshmd5.o \
 		sshpubk.o sshrand.o sshrsa.o sshsh256.o sshsh512.o sshsha.o \
 		sshshare.o sshzlib.o time.o timing.o tree234.o uxagentc.o \
-		uxcons.o uxgss.o uxmisc.o uxnet.o uxnoise.o uxproxy.o \
-		uxsel.o uxsftp.o uxshare.o uxstore.o version.o wildcard.o \
-		x11fwd.o
+		uxcons.o uxgss.o uxmisc.o uxnet.o uxnoise.o uxpeer.o \
+		uxproxy.o uxsel.o uxsftp.o uxshare.o uxstore.o version.o \
+		wildcard.o x11fwd.o
 	$(CC) -o $@ be_ssh.o callback.o cmdline.o conf.o cproxy.o int64.o \
 		logging.o misc.o pgssapi.o pinger.o portfwd.o proxy.o pscp.o \
 		settings.o sftp.o ssh.o sshaes.o ssharcf.o sshblowf.o \
@@ -157,8 +157,8 @@ pscp: be_ssh.o callback.o cmdline.o conf.o cproxy.o int64.o logging.o misc.o \
 		sshgssc.o sshmd5.o sshpubk.o sshrand.o sshrsa.o sshsh256.o \
 		sshsh512.o sshsha.o sshshare.o sshzlib.o time.o timing.o \
 		tree234.o uxagentc.o uxcons.o uxgss.o uxmisc.o uxnet.o \
-		uxnoise.o uxproxy.o uxsel.o uxsftp.o uxshare.o uxstore.o \
-		version.o wildcard.o x11fwd.o $(ULDFLAGS) 
+		uxnoise.o uxpeer.o uxproxy.o uxsel.o uxsftp.o uxshare.o \
+		uxstore.o version.o wildcard.o x11fwd.o $(ULDFLAGS) 
 
 psftp: be_ssh.o callback.o cmdline.o conf.o cproxy.o int64.o logging.o \
 		misc.o pgssapi.o pinger.o portfwd.o proxy.o psftp.o \
@@ -167,8 +167,8 @@ psftp: be_ssh.o callback.o cmdline.o conf.o cproxy.o int64.o logging.o \
 		sshgssc.o sshmd5.o sshpubk.o sshrand.o sshrsa.o sshsh256.o \
 		sshsh512.o sshsha.o sshshare.o sshzlib.o time.o timing.o \
 		tree234.o uxagentc.o uxcons.o uxgss.o uxmisc.o uxnet.o \
-		uxnoise.o uxproxy.o uxsel.o uxsftp.o uxshare.o uxstore.o \
-		version.o wildcard.o x11fwd.o
+		uxnoise.o uxpeer.o uxproxy.o uxsel.o uxsftp.o uxshare.o \
+		uxstore.o version.o wildcard.o x11fwd.o
 	$(CC) -o $@ be_ssh.o callback.o cmdline.o conf.o cproxy.o int64.o \
 		logging.o misc.o pgssapi.o pinger.o portfwd.o proxy.o \
 		psftp.o settings.o sftp.o ssh.o sshaes.o ssharcf.o \
@@ -176,8 +176,9 @@ psftp: be_ssh.o callback.o cmdline.o conf.o cproxy.o int64.o logging.o \
 		sshdss.o sshgssc.o sshmd5.o sshpubk.o sshrand.o sshrsa.o \
 		sshsh256.o sshsh512.o sshsha.o sshshare.o sshzlib.o time.o \
 		timing.o tree234.o uxagentc.o uxcons.o uxgss.o uxmisc.o \
-		uxnet.o uxnoise.o uxproxy.o uxsel.o uxsftp.o uxshare.o \
-		uxstore.o version.o wildcard.o x11fwd.o $(ULDFLAGS) 
+		uxnet.o uxnoise.o uxpeer.o uxproxy.o uxsel.o uxsftp.o \
+		uxshare.o uxstore.o version.o wildcard.o x11fwd.o \
+		$(ULDFLAGS) 
 
 puttygen: cmdgen.o conf.o import.o misc.o notiming.o sshaes.o sshbn.o \
 		sshdes.o sshdss.o sshdssg.o sshmd5.o sshprime.o sshpubk.o \
@@ -434,7 +435,7 @@ ssharcf.o: ../ssharcf.c ../ssh.h ../puttymem.h ../tree234.h ../network.h \
 sshblowf.o: ../sshblowf.c ../ssh.h ../puttymem.h ../tree234.h ../network.h \
 		../int64.h ../misc.h
 	$(CC) $(COMPAT) $(CFLAGS) $(XFLAGS) -c ../sshblowf.c
-sshbn.o: ../sshbn.c ../misc.h ../ssh.h ../puttymem.h ../tree234.h \
+sshbn.o: ../sshbn.c ../misc.h ../sshbn.h ../ssh.h ../puttymem.h ../tree234.h \
 		../network.h ../int64.h
 	$(CC) $(COMPAT) $(CFLAGS) $(XFLAGS) -c ../sshbn.c
 sshcrc.o: ../sshcrc.c ../ssh.h ../puttymem.h ../tree234.h ../network.h \
@@ -572,6 +573,11 @@ uxnoise.o: ../unix/uxnoise.c ../putty.h ../ssh.h ../storage.h ../puttyps.h \
 		../windows/winstuff.h ../macosx/osx.h ../unix/unix.h \
 		../windows/winhelp.h ../charset/charset.h
 	$(CC) $(COMPAT) $(CFLAGS) $(XFLAGS) -c ../unix/uxnoise.c
+uxpeer.o: ../unix/uxpeer.c ../putty.h ../puttyps.h ../network.h ../misc.h \
+		../windows/winstuff.h ../macosx/osx.h ../unix/unix.h \
+		../puttymem.h ../tree234.h ../windows/winhelp.h \
+		../charset/charset.h
+	$(CC) $(COMPAT) $(CFLAGS) $(XFLAGS) -c ../unix/uxpeer.c
 uxplink.o: ../unix/uxplink.c ../putty.h ../storage.h ../tree234.h \
 		../puttyps.h ../network.h ../misc.h ../windows/winstuff.h \
 		../macosx/osx.h ../unix/unix.h ../puttymem.h \
