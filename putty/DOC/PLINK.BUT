@@ -1,4 +1,4 @@
-\versionid $Id: plink.but,v 1.21 2004/02/07 18:17:50 simon Exp $
+\versionid $Id: plink.but,v 1.23.2.1 2004/08/03 12:07:37 jacob Exp $
 
 \C{plink} Using the command-line connection tool Plink
 
@@ -43,10 +43,11 @@ use Plink:
 
 \c Z:\sysosd>plink
 \c PuTTY Link: command-line connection utility
-\c Release 0.54
+\c Release 0.55
 \c Usage: plink [options] [user@]host [command]
 \c        ("host" can also be a PuTTY saved session name)
 \c Options:
+\c   -V        print version information
 \c   -v        show verbose messages
 \c   -load sessname  Load settings from saved session
 \c   -ssh -telnet -rlogin -raw
@@ -225,7 +226,7 @@ start a backup on a remote machine, you might use a command like:
 Or perhaps you want to fetch all system log lines relating to a
 particular web area:
 
-\c plink mysession grep /~fjbloggs/ /var/log/httpd/access.log > fredlogs
+\c plink mysession grep /~fred/ /var/log/httpd/access.log > fredlog
 
 Any non-interactive command you could usefully run on the server
 command line, you can run in a batch file using Plink in this way.

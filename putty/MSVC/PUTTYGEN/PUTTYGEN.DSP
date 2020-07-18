@@ -94,95 +94,95 @@ LINK32=link.exe
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
-SOURCE=..\..\import.c
+SOURCE=..\..\.\import.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\misc.c
+SOURCE=..\..\.\misc.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\noise.c
+SOURCE=..\..\.\noise.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\puttygen.c
+SOURCE=..\..\.\puttygen.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\sshaes.c
+SOURCE=..\..\.\sshaes.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\sshbn.c
+SOURCE=..\..\.\sshbn.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\sshdes.c
+SOURCE=..\..\.\sshdes.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\sshdss.c
+SOURCE=..\..\.\sshdss.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\sshdssg.c
+SOURCE=..\..\.\sshdssg.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\sshmd5.c
+SOURCE=..\..\.\sshmd5.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\sshprime.c
+SOURCE=..\..\.\sshprime.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\sshpubk.c
+SOURCE=..\..\.\sshpubk.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\sshrand.c
+SOURCE=..\..\.\sshrand.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\sshrsa.c
+SOURCE=..\..\.\sshrsa.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\sshrsag.c
+SOURCE=..\..\.\sshrsag.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\sshsh512.c
+SOURCE=..\..\.\sshsh512.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\sshsha.c
+SOURCE=..\..\.\sshsha.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\tree234.c
+SOURCE=..\..\.\tree234.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\version.c
+SOURCE=..\..\.\version.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\winctrls.c
+SOURCE=..\..\.\winctrls.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\winmisc.c
+SOURCE=..\..\.\winmisc.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\winstore.c
+SOURCE=..\..\.\winstore.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\winutils.c
+SOURCE=..\..\.\winutils.c
 # End Source File
 # End Group
 # Begin Group "Header Files"
@@ -190,15 +190,55 @@ SOURCE=..\..\winutils.c
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
 # Begin Source File
 
+SOURCE=..\..\.\dialog.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\.\int64.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\.\misc.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\.\network.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\.\putty.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\.\puttymem.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\.\puttyps.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\.\ssh.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\.\storage.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\.\tree234.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\.\winhelp.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\.\winstuff.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\charset\charset.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\dialog.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\int64.h
 # End Source File
 # Begin Source File
 
@@ -206,47 +246,7 @@ SOURCE=..\..\mac\macstuff.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\misc.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\network.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\putty.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\puttymem.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\puttyps.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\ssh.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\storage.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\tree234.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\..\unix\unix.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\winhelp.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\winstuff.h
 # End Source File
 # End Group
 # Begin Group "Resource Files"
@@ -254,11 +254,11 @@ SOURCE=..\..\winstuff.h
 # PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
 # Begin Source File
 
-SOURCE=..\..\puttygen.ico
+SOURCE=..\..\.\puttygen.ico
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\puttygen.rc
+SOURCE=..\..\.\puttygen.rc
 # End Source File
 # End Group
 # End Target

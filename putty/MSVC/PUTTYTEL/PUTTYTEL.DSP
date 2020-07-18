@@ -94,7 +94,7 @@ LINK32=link.exe
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
-SOURCE=..\..\be_nossh.c
+SOURCE=..\..\.\be_nossh.c
 
 !IF  "$(CFG)" == "puttytel - Win32 Release"
 
@@ -107,119 +107,119 @@ SOURCE=..\..\be_nossh.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\cmdline.c
+SOURCE=..\..\.\cmdline.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\config.c
+SOURCE=..\..\.\config.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\dialog.c
+SOURCE=..\..\.\dialog.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\ldisc.c
+SOURCE=..\..\.\ldisc.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\ldiscucs.c
+SOURCE=..\..\.\ldiscucs.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\logging.c
+SOURCE=..\..\.\logging.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\misc.c
+SOURCE=..\..\.\misc.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\pproxy.c
+SOURCE=..\..\.\pproxy.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\printing.c
+SOURCE=..\..\.\printing.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\proxy.c
+SOURCE=..\..\.\proxy.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\raw.c
+SOURCE=..\..\.\raw.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\rlogin.c
+SOURCE=..\..\.\rlogin.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\settings.c
+SOURCE=..\..\.\settings.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\sizetip.c
+SOURCE=..\..\.\sizetip.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\telnet.c
+SOURCE=..\..\.\telnet.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\terminal.c
+SOURCE=..\..\.\terminal.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\tree234.c
+SOURCE=..\..\.\tree234.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\unicode.c
+SOURCE=..\..\.\unicode.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\version.c
+SOURCE=..\..\.\version.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\wcwidth.c
+SOURCE=..\..\.\wcwidth.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\wincfg.c
+SOURCE=..\..\.\wincfg.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\winctrls.c
+SOURCE=..\..\.\winctrls.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\windefs.c
+SOURCE=..\..\.\windefs.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\windlg.c
+SOURCE=..\..\.\windlg.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\window.c
+SOURCE=..\..\.\window.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\winmisc.c
+SOURCE=..\..\.\winmisc.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\winnet.c
+SOURCE=..\..\.\winnet.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\winstore.c
+SOURCE=..\..\.\winstore.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\winutils.c
+SOURCE=..\..\.\winutils.c
 # End Source File
 # End Group
 # Begin Group "Header Files"
@@ -227,19 +227,71 @@ SOURCE=..\..\winutils.c
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
 # Begin Source File
 
+SOURCE=..\..\.\dialog.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\.\int64.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\.\ldisc.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\.\misc.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\.\network.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\.\proxy.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\.\putty.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\.\puttymem.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\.\puttyps.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\.\ssh.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\.\storage.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\.\terminal.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\.\tree234.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\.\win_res.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\.\winhelp.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\.\winstuff.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\charset\charset.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\dialog.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\int64.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\ldisc.h
 # End Source File
 # Begin Source File
 
@@ -247,59 +299,7 @@ SOURCE=..\..\mac\macstuff.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\misc.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\network.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\proxy.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\putty.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\puttymem.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\puttyps.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\ssh.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\storage.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\terminal.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\tree234.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\..\unix\unix.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\win_res.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\winhelp.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\winstuff.h
 # End Source File
 # End Group
 # Begin Group "Resource Files"
@@ -307,15 +307,15 @@ SOURCE=..\..\winstuff.h
 # PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
 # Begin Source File
 
-SOURCE=..\..\putty.ico
+SOURCE=..\..\.\putty.ico
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\puttycfg.ico
+SOURCE=..\..\.\puttycfg.ico
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\win_res.rc
+SOURCE=..\..\.\win_res.rc
 # End Source File
 # End Group
 # End Target

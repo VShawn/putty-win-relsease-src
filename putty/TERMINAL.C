@@ -3432,8 +3432,9 @@ static void do_paint(Terminal *term, Context ctx, int may_optimise)
 	    }
 	    tattr |= (tchar & CSET_MASK);
 	    tchar &= CHAR_MASK;
-	    if ((d[1] & (CHAR_MASK | CSET_MASK)) == UCSWIDE)
-		    tattr |= ATTR_WIDE;
+	    if (j < term->cols-1 &&
+		(d[1] & (CHAR_MASK | CSET_MASK)) == UCSWIDE)
+		tattr |= ATTR_WIDE;
 
 	    /* Video reversing things */
 	    if (term->selstate == DRAGGING || term->selstate == SELECTED) {
@@ -3799,9 +3800,13 @@ static void clipme(Terminal *term, pos top, pos bottom, int rect, int desel)
 void term_copyall(Terminal *term)
 {
     pos top;
+    pos bottom;
+    tree234 *screen = term->screen;
     top.y = -sblines(term);
     top.x = 0;
-    clipme(term, top, term->curs, 0, TRUE);
+    bottom.y = find_last_nonempty_line(term, screen);
+    bottom.x = term->cols;
+    clipme(term, top, bottom, 0, TRUE);
 }
 
 /*
