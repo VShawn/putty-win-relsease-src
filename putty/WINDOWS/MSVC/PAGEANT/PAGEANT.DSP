@@ -166,6 +166,10 @@ SOURCE=..\..\..\windows\winpgntc.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\windows\winsecur.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\windows\winutils.c
 # End Source File
 # End Group
@@ -218,11 +222,19 @@ SOURCE=..\..\..\unix\unix.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\version.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\windows\rcstuff.h
 # End Source File
 # Begin Source File
 
 SOURCE=..\..\..\windows\winhelp.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\windows\winsecur.h
 # End Source File
 # Begin Source File
 
