@@ -1,9 +1,29 @@
-\versionid $Id: faq.but,v 1.35 2002/09/14 10:24:27 jacob Exp $
+\versionid $Id: faq.but,v 1.57 2004/02/12 18:28:00 simon Exp $
 
 \A{faq} PuTTY FAQ
 
 This FAQ is published on the PuTTY web site, and also provided as an
 appendix in the manual.
+
+\H{faq-intro} Introduction
+
+\S{faq-what} What is PuTTY?
+
+PuTTY is a client program for the SSH, Telnet and Rlogin network
+protocols.
+
+These protocols are all used to run a remote session on a computer,
+over a network. PuTTY implements the client end of that session: the
+end at which the session is displayed, rather than the end at which
+it runs.
+
+In really simple terms: you run PuTTY on a Windows machine, and tell
+it to connect to (for example) a Unix machine. PuTTY opens a window.
+Then, anything you type into that window is sent straight to the
+Unix machine, and everything the Unix machine sends back is
+displayed in the window. So you can work on the Unix machine as if
+you were sitting at its console, while actually sitting somewhere
+else.
 
 \H{faq-support} Features supported in PuTTY
 
@@ -20,16 +40,14 @@ listed there, it's been implemented. If it's listed as a change made
 development snapshots, in which case testing will be very welcome.
 
 \b try the
-\W{http://www.chiark.greenend.org.uk/~sgtatham/putty/wishlist.html}{Wishlist
+\W{http://www.chiark.greenend.org.uk/~sgtatham/putty/wishlist/}{Wishlist
 page}, and see if you can find the feature there. If it's on there,
-it probably \e{hasn't} been implemented.
+and not in the \q{Recently fixed} section, it probably \e{hasn't} been
+implemented.
 
 \S{faq-ssh2}{Question} Does PuTTY support SSH v2?
 
 Yes. SSH v2 support has been available in PuTTY since version 0.50.
-However, currently the \e{default} SSH protocol is v1; to select SSH
-v2 if your server supports both, go to the SSH panel and change the
-\e{Preferred SSH protocol version} option.
 
 Public key authentication (both RSA and DSA) in SSH v2 is new in
 version 0.52.
@@ -37,9 +55,9 @@ version 0.52.
 \S{faq-ssh2-keyfmt}{Question} Does PuTTY support reading OpenSSH or
 \cw{ssh.com} SSHv2 private key files?
 
-Version 0.52 doesn't, but in the latest development snapshots
-PuTTYgen can load and save both OpenSSH and \cw{ssh.com} private key
-files.
+PuTTY doesn't support this natively, but as of 0.53
+PuTTYgen can convert both OpenSSH and \cw{ssh.com} private key
+files into PuTTY's format.
 
 \S{faq-ssh1}{Question} Does PuTTY support SSH v1?
 
@@ -132,6 +150,12 @@ of host key checking: the right key will be accepted and the wrong
 ones will not. Adding an option to turn host key checking off
 completely is the wrong solution and we will not do it.
 
+If you have host keys available in the common \c{known_hosts} format,
+we have a script called 
+\W{http://cvs.tartarus.org/putty/contrib/kh2reg.py}\c{kh2reg.py}
+to convert them to a Windows .REG file, which can be installed ahead of
+time by double-clicking or using \c{REGEDIT}.
+
 \S{faq-server}{Question} Will you write an SSH server for the PuTTY
 suite, to go with the client?
 
@@ -150,58 +174,70 @@ anyone else wants to try it.
 \S{faq-pscp-ascii}{Question} Can PSCP or PSFTP transfer files in
 ASCII mode?
 
-Unfortunately not. This is a limitation of the file transfer
-protocols: the SCP and SFTP protocols have no notion of transferring
-a file in anything other than binary mode.
+Unfortunately not.
 
-SFTP is designed to be extensible, so it's possible that an
-extension might be proposed at some later date that implements ASCII
-transfer. But the PuTTY team can't do anything about it until that
-happens.
+Until recently, this was a limitation of the file transfer protocols:
+the SCP and SFTP protocols had no notion of transferring a file in
+anything other than binary mode. (This is still true of SCP.)
+
+The current draft protocol spec of SFTP proposes a means of
+implementing ASCII transfer. At some point PSCP/PSFTP may implement
+this proposal.
 
 \H{faq-ports} Ports to other operating systems
 
 The eventual goal is for PuTTY to be a multi-platform program, able
-to run on at least Windows, MacOS and Unix. Whether this will
-actually ever happen I have no idea, but it is the plan. A Mac port
-has been started, but is only half-finished and currently not moving
-very fast.
+to run on at least Windows, Mac OS and Unix.
 
 Porting will become easier once PuTTY has a generalised porting
 layer, drawing a clear line between platform-dependent and
-platform-independent code. The general intention is for this porting
-layer to evolve naturally as part of the process of doing the first
-port. One particularly nasty part of this will be separating the
-many configuration options into platform-dependent and
-platform-independent ones; for example, the options controlling when
-the Windows System menu appears will be pretty much meaningless
-under X11 or perhaps other windowing systems, whereas Telnet Passive
-Mode is universal and shouldn't need to be specified once for each
-platform.
+platform-independent code. The general intention was for this
+porting layer to evolve naturally as part of the process of doing
+the first port; a Unix port has now been released and the plan
+seems to be working so far.
 
 \S{faq-ports-general}{Question} What ports of PuTTY exist?
 
-Currently, PuTTY only runs on full Win32 systems. This includes
-Windows 95, 98, and ME, and it includes Windows NT, Windows 2000 and
-Windows XP.
+Currently, release versions of PuTTY tools only run on full Win32
+systems and Unix. \q{Win32} includes Windows 95, 98, and ME, and it
+includes Windows NT, Windows 2000 and Windows XP.
 
-It does \e{not} include Windows CE (see \k{faq-wince}), and it does
-not quite include the Win32s environment under Windows 3.1 (see
-\k{faq-win31}).
+In the development code, a partial port to the Mac OS (see
+\k{faq-mac-port}) is under way.
 
-We do not have ports for any other systems at the present time. If
-anyone told you we had a Unix port, or an iPaq port, or any other
-port of PuTTY, they were mistaken. We don't.
+Currently PuTTY does \e{not} run on Windows CE (see \k{faq-wince}),
+and it does not quite run on the Win32s environment under Windows
+3.1 (see \k{faq-win31}).
+
+We do not have release-quality ports for any other systems at the
+present time. If anyone told you we had an EPOC port, or an iPaq port,
+or any other port of PuTTY, they were mistaken. We don't.
+
+\S{faq-unix}{Question} Is there a port to Unix?
+
+As of 0.54, there are Unix ports of most of the traditional PuTTY
+tools, and also one entirely new application.
+
+If you look at the source release, you should find a \c{unix}
+subdirectory containing \c{Makefile.gtk}, which should build you Unix
+ports of Plink, PuTTY itself, PuTTYgen, PSCP, PSFTP, and also
+\c{pterm} - an \cw{xterm}-type program which supports the same
+terminal emulation as PuTTY. We do not yet have a Unix port of
+Pageant.
+
+If you don't have Gtk, you should still be able to build the
+command-line tools.
+
+Note that Unix PuTTY has mostly only been tested on Linux so far;
+portability problems such as BSD-style ptys or different header file
+requirements are expected.
 
 \S{faq-wince}{Question} Will there be a port to Windows CE or PocketPC?
 
-Probably not in the particularly near future. Despite sharing large
-parts of the Windows API, in practice WinCE doesn't appear to be
-significantly easier to port to than a totally different operating
-system.
-
-However, PuTTY on portable devices would clearly be a useful thing,
-so in the long term I hope there will be a WinCE port.
+It's currently being worked on, but it's only in its early stages yet,
+and certainly isn't yet useful.  PuTTY on portable devices would
+clearly be a useful thing, so in the long term I hope it can be
+brought up to release quality.
 
 \S{faq-win31}{Question} Is there a port to Windows 3.1?
 
@@ -222,18 +258,9 @@ testing in this area would be very welcome!
 
 \S{faq-mac-port}{Question} Will there be a port to the Mac?
 
-A Mac port was started once and is half-finished, but development
-has been static for some time and the main PuTTY code has moved on,
-so it's not clear how quickly development would resume even if
-developer effort were available.
-
-\S{faq-unix}{Question} Will there be a port to Unix?
-
-I hope so, if only so that I can have an \cw{xterm}-like program
-that supports exactly the same terminal emulation as PuTTY. If and
-when we do do a Unix port, it will have a local-terminal back end so
-it can be used like an \cw{xterm}, rather than only being usable as
-a network utility.
+There is a port to the Mac OS in progress. It's just about usable, but
+has an awful lot of gaps and rough edges that will need cleaning up
+before release.
 
 \S{faq-epoc}{Question} Will there be a port to EPOC?
 
@@ -241,6 +268,10 @@ I hope so, but given that ports aren't really progressing very fast
 even on systems the developers \e{do} already know how to program
 for, it might be a long time before any of us get round to learning
 a new system and doing the port for that.
+
+However, some of the work has been done by other people, and a beta
+port of PuTTY for the Nokia 9200 Communicator series is available
+from \W{http://www.s2.org/putty/}\cw{http://www.s2.org/putty/}
 
 \H{faq-embedding} Embedding PuTTY in other programs
 
@@ -330,7 +361,10 @@ To run a PuTTY session saved under the name \q{\cw{mysession}},
 create a Windows shortcut that invokes PuTTY with a command line
 like
 
-\c \path\name\to\putty.exe @mysession
+\c \path\name\to\putty.exe -load mysession
+
+(Note: prior to 0.53, the syntax was \c{@session}. This is now
+deprecated and may be removed at some point.)
 
 \S{faq-startssh}{Question} How can I start an SSH session straight
 from the command line?
@@ -365,10 +399,13 @@ forwarding? I can't find the Tunnels panel.
 This is a new feature in version 0.52. You should upgrade.
 
 \S{faq-options}{Question} How do I use all PuTTY's features (public
-keys, port forwarding, SSH v2, etc.) in PSCP, PSFTP and Plink?
+keys, proxying, cipher selection, etc.) in PSCP, PSFTP and Plink?
 
-The command-line tools are currently rather short of command line
-options to enable this sort of thing. However, you can use most of
+Most major features (e.g., public keys, port forwarding) are available
+through command line options. See the documentation.
+
+Not all features are accessible from the command line yet, although
+we'd like to fix this. In the meantime, you can use most of
 PuTTY's features if you create a PuTTY saved session, and then use
 the name of the saved session on the command line in place of a
 hostname. This works for PSCP, PSFTP and Plink (but don't expect
@@ -425,8 +462,10 @@ of quotes in the obvious way:
 \S{faq-incorrect-mac}{Question} Why do I see \q{Incorrect MAC
 received on packet}?
 
-This is due to a bug in old SSH 2 servers distributed by
-\cw{ssh.com}. Version 2.3.0 and below of their SSH 2 server
+One possible cause of this that used to be common is a bug in old
+SSH 2 servers distributed by \cw{ssh.com}. (This is not the only
+possible cause; see \k{errors-crc} in the documentation.)
+Version 2.3.0 and below of their SSH 2 server
 constructs Message Authentication Codes in the wrong way, and
 expects the client to construct them in the same wrong way. PuTTY
 constructs the MACs correctly by default, and hence these old
@@ -506,7 +545,7 @@ v2 servers from \cw{ssh.com} will require the key exchange to be
 repeated one hour after the start of the connection, and PuTTY will
 get this wrong.
 
-Upgrade to version 0.52 and the problem should go away.
+Upgrade to version 0.52 or better and the problem should go away.
 
 \S{faq-outofmem}{Question} After trying to establish an SSH 2
 connection, PuTTY says \q{Out of memory} and dies.
@@ -552,7 +591,7 @@ Bourne shell derivative) or \c{.login} (if you use a C shell).
 Putting them in more general files such as \c{.bashrc} or \c{.cshrc}
 is liable to lead to problems.
 
-\S{faq-psftp-slow} PSFTP transfers files much slower than PSCP.
+\S{faq-psftp-slow}{Question} PSFTP transfers files much slower than PSCP.
 
 We believe this is because the SFTP and SSH2 protocols are less
 efficient at bulk data transfer than SCP and SSH1, because every
@@ -566,7 +605,7 @@ areas of black space where colour ought to be.
 
 You almost certainly need to enable the \q{Use background colour to
 erase screen} setting in the Terminal panel. Note that if you do
-this in mid-session, it won't take effect until you reset the
+this in mid-session, it may not take effect until you reset the
 terminal (see \k{faq-resetterm}).
 
 \S{faq-resetterm}{Question} When I change some terminal settings,
@@ -579,15 +618,19 @@ send sequences that modify these options in mid-session, but when
 the terminal is reset (by server action, or by you choosing \q{Reset
 Terminal} from the System menu) the defaults are restored.
 
-If you want to change one of these options in the middle of a
-session, you will find that the change does not immediately take
-effect. It will only take effect once you reset the terminal.
+In versions 0.53b and prior, if you change one of these options in
+the middle of a session, you will find that the change does not
+immediately take effect. It will only take effect once you reset
+the terminal.
+
+In version 0.54, the behaviour has changed - changes to these
+settings take effect immediately.
 
 \S{faq-altgr}{Question} I can't type characters that require the
 AltGr key.
 
 In PuTTY version 0.51, the AltGr key was broken. Upgrade to version
-0.52.
+0.52 or better.
 
 \S{faq-idleout}{Question} My PuTTY sessions unexpectedly close after
 they are idle for a while.
@@ -758,6 +801,25 @@ key in the wrong format isn't optimal.
 To connect using SSH 2 to a server that supports both versions, you
 need to change the configuration from the default (see \k{faq-ssh2}).
 
+\S{faq-rh8-utf8}{Question} When I'm connected to a Red Hat Linux 8.0
+system, some characters don't display properly.
+
+A common complaint is that hyphens in man pages show up as a-acute.
+
+With release 8.0, Red Hat appear to have made UTF-8 the default
+character set. There appears to be no way for terminal emulators such
+as PuTTY to know this (as far as we know, the appropriate escape
+sequence to switch into UTF-8 mode isn't sent).
+
+A fix is to configure sessions to RH8 systems to use UTF-8
+translation - see \k{config-charset} in the documentation. (Note that
+if you use \q{Change Settings}, changes may not take place immediately
+- see \k{faq-resetterm}.)
+
+If you really want to change the character set used by the server, the
+right place is \c{/etc/sysconfig/i18n}, but this shouldn't be
+necessary.
+
 \H{faq-secure} Security questions
 
 \S{faq-publicpc}{Question} Is it safe for me to download PuTTY and
@@ -870,13 +932,11 @@ general-subscription mailing list, what is?
 
 There isn't one, that we know of.
 
-If someone else wants to set up a mailing list for PuTTY users to
-help each other with common problems, that would be fine with us;
-but the PuTTY team would almost certainly not have the time to read
-it, so any questions the list couldn't answer would have to be
-forwarded on to us by the questioner. In any case, it's probably
-better to use the established newsgroup \cw{comp.security.ssh} for
-this purpose.
+If someone else wants to set up a mailing list or other forum for
+PuTTY users to help each other with common problems, that would be
+fine with us, though the PuTTY team would almost certainly not have the
+time to read it.  It's probably better to use the established
+newsgroup \cw{comp.security.ssh} for this purpose.
 
 \S{faq-donations}{Question} How can I donate to PuTTY development?
 
@@ -926,8 +986,15 @@ PuTTY team can personally recommend Thinking Putty, which you can
 buy from Crazy Aaron's Putty World, at
 \W{http://www.puttyworld.com}\cw{www.puttyworld.com}.
 
-\S{faq-pronounce}{Question} How do I pronounce PuTTY?
+\S{faq-meaning}{Question} What does \q{PuTTY} mean?
 
-Exactly like the normal word \q{putty}. Just like the stuff you put
-on window frames. (One of the reasons it's called PuTTY is because
-it makes Windows usable. :-)
+It's the name of a popular SSH and Telnet client.  Any other meaning
+is in the eye of the beholder.  It's been rumoured that \q{PuTTY}
+is the antonym of \q{\cw{getty}}, or that it's the stuff that makes your
+Windows useful, or that it's a kind of plutonium Teletype.  We
+couldn't possibly comment on such allegations.
+
+\S{faq-pronounce}{Question} How do I pronounce \q{PuTTY}?
+
+Exactly like the English word \q{putty}, which we pronounce
+/\u02C8{'}p\u028C{V}t\u026A{I}/.

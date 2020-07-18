@@ -1,4 +1,4 @@
-\versionid $Id: plink.but,v 1.17 2002/09/11 17:30:36 jacob Exp $
+\versionid $Id: plink.but,v 1.21 2004/02/07 18:17:50 simon Exp $
 
 \C{plink} Using the command-line connection tool Plink
 
@@ -43,7 +43,7 @@ use Plink:
 
 \c Z:\sysosd>plink
 \c PuTTY Link: command-line connection utility
-\c Release 0.53
+\c Release 0.54
 \c Usage: plink [options] [user@]host [command]
 \c        ("host" can also be a PuTTY saved session name)
 \c Options:
@@ -57,14 +57,19 @@ use Plink:
 \c   -batch    disable all interactive prompts
 \c The following options only apply to SSH connections:
 \c   -pw passw login with specified password
-\c   -L listen-port:host:port   Forward local port to remote address
-\c   -R listen-port:host:port   Forward remote port to local address
+\c   -D [listen-IP:]listen-port
+\c             Dynamic SOCKS-based port forwarding
+\c   -L [listen-IP:]listen-port:host:port
+\c             Forward local port to remote address
+\c   -R [listen-IP:]listen-port:host:port
+\c             Forward remote port to local address
 \c   -X -x     enable / disable X11 forwarding
 \c   -A -a     enable / disable agent forwarding
 \c   -t -T     enable / disable pty allocation
 \c   -1 -2     force use of particular protocol version
 \c   -C        enable compression
 \c   -i key    private key file for authentication
+\c   -s        remote command is an SSH subsystem (SSH-2 only)
 
 Once this works, you are ready to use Plink.
 
@@ -124,6 +129,19 @@ Usually Plink is not invoked directly by a user, but run
 automatically by another process. Therefore you typically do not
 want Plink to prompt you for a user name or a password.
 
+Next, you are likely to need to avoid the various interactive
+prompts Plink can produce. You might be prompted to verify the host
+key of the server you're connecting to, to enter a user name, or to
+enter a password.
+
+To avoid being prompted for the server host key when using Plink for
+an automated connection, you should first make a \e{manual}
+connection (using either of PuTTY or Plink) to the same server,
+verify the host key (see \k{gs-hostkey} for more information), and
+select Yes to add the host key to the Registry. After that, Plink
+commands connecting to that server should not give a host key prompt
+unless the host key changes.
+
 To avoid being prompted for a user name, you can:
 
 \b Use the \c{-l} option to specify a user name on the command line.
@@ -172,8 +190,12 @@ Plink accepts all the general command line options supported by the
 PuTTY tools. See \k{using-general-opts} for a description of these
 options.
 
-In addition to this, Plink accepts one other option: the \c{-batch}
-option. If you use the \c{-batch} option, Plink will never give an
+Plink also supports some of its own options. The following sections
+describe Plink's specific command-line options.
+
+\S2{plink-option-batch} \c{-batch}: disable all interactive prompts
+
+If you use the \c{-batch} option, Plink will never give an
 interactive prompt while establishing the connection. If the
 server's host key is invalid, for example (see \k{gs-hostkey}), then
 the connection will simply be abandoned instead of asking you what
@@ -182,6 +204,14 @@ to do next.
 This may help Plink's behaviour when it is used in automated
 scripts: using \c{-batch}, if something goes wrong at connection
 time, the batch job will fail rather than hang.
+
+\S2{plink-option-s} \c{-s}: remote command is SSH subsystem
+
+If you specify the \c{-s} option, Plink passes the specified command
+as the name of an SSH \q{subsystem} rather than an ordinary command
+line.
+
+(This option is only meaningful with the SSH-2 protocol.)
 
 \H{plink-batch} Using Plink in \i{batch files} and \i{scripts}
 

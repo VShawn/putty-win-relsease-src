@@ -2,20 +2,22 @@
  * Pageant: the PuTTY Authentication Agent.
  */
 
-#include <windows.h>
-#ifndef NO_SECURITY
-#include <aclapi.h>
-#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
 #include <assert.h>
 #include <tchar.h>
 
+#include "putty.h"
 #include "ssh.h"
 #include "misc.h"
 #include "tree234.h"
-#include "winstuff.h"
+
+#include <shellapi.h>
+
+#ifndef NO_SECURITY
+#include <aclapi.h>
+#endif
 
 #define IDI_MAINICON 200
 #define IDI_TRAYICON 201
@@ -49,7 +51,7 @@ static HMENU systray_menu, session_menu;
 static int already_running;
 static int requested_help;
 
-static char *help_path;
+char *help_path;
 static char *putty_path;
 
 #define IDM_PUTTY         0x0060
@@ -58,6 +60,23 @@ static char *putty_path;
 #define PUTTY_REGKEY      "Software\\SimonTatham\\PuTTY\\Sessions"
 #define PUTTY_DEFAULT     "Default%20Settings"
 static int initial_menuitems_count;
+
+/*
+ * Print a modal (Really Bad) message box and perform a fatal exit.
+ */
+void modalfatalbox(char *fmt, ...)
+{
+    va_list ap;
+    char *buf;
+
+    va_start(ap, fmt);
+    buf = dupvprintf(fmt, ap);
+    va_end(ap);
+    MessageBox(main_hwnd, buf, "Pageant Fatal Error",
+	       MB_SYSTEMMODAL | MB_ICONERROR | MB_OK);
+    sfree(buf);
+    exit(1);
+}
 
 /* Un-munge session names out of the registry. */
 static void unmungestr(char *in, char *out, int outlen)
@@ -96,12 +115,6 @@ static gsi_fn_t getsecurityinfo;
 #endif
 
 /*
- * Exports from pageantc.c
- */
-void agent_query(void *in, int inlen, void **out, int *outlen);
-int agent_exists(void);
-
-/*
  * Forward references
  */
 static void *make_keylist1(int *length);
@@ -136,14 +149,6 @@ struct blob {
     int len;
 };
 static int cmpkeys_ssh2_asymm(void *av, void *bv);
-
-/*
- * This function is needed to link with the DES code. We need not
- * have it do anything at all.
- */
-void logevent(char *msg)
-{
-}
 
 #define GET_32BIT(cp) \
     (((unsigned long)(unsigned char)(cp)[0] << 24) | \
@@ -221,7 +226,7 @@ static int CALLBACK AboutProc(HWND hwnd, UINT msg,
 	    return 0;
 	  case 101:
 	    EnableWindow(hwnd, 0);
-	    DialogBox(instance, MAKEINTRESOURCE(214), NULL, LicenceProc);
+	    DialogBox(instance, MAKEINTRESOURCE(214), hwnd, LicenceProc);
 	    EnableWindow(hwnd, 1);
 	    SetActiveWindow(hwnd);
 	    return 0;
@@ -381,7 +386,7 @@ static void keylist_update(void)
 /*
  * This function loads a key from a file and adds it.
  */
-static void add_keyfile(char *filename)
+static void add_keyfile(Filename filename)
 {
     char passphrase[PASSPHRASE_MAXLEN];
     struct RSAKey *rkey = NULL;
@@ -394,7 +399,7 @@ static void add_keyfile(char *filename)
     int type;
     int original_pass;
 	
-    type = key_type(filename);
+    type = key_type(&filename);
     if (type != SSH_KEYTYPE_SSH1 && type != SSH_KEYTYPE_SSH2) {
 	char msg[256];
 	sprintf(msg, "Couldn't load this key (%s)", key_type_to_str(type));
@@ -412,7 +417,7 @@ static void add_keyfile(char *filename)
 	int i, nkeys, bloblen;
 
 	if (type == SSH_KEYTYPE_SSH1) {
-	    if (!rsakey_pubblob(filename, &blob, &bloblen)) {
+	    if (!rsakey_pubblob(&filename, &blob, &bloblen, NULL)) {
 		MessageBox(NULL, "Couldn't load private key.", APPNAME,
 			   MB_OK | MB_ICONERROR);
 		return;
@@ -420,14 +425,14 @@ static void add_keyfile(char *filename)
 	    keylist = get_keylist1();
 	} else {
 	    unsigned char *blob2;
-	    blob = ssh2_userkey_loadpub(filename, NULL, &bloblen);
+	    blob = ssh2_userkey_loadpub(&filename, NULL, &bloblen, NULL);
 	    if (!blob) {
 		MessageBox(NULL, "Couldn't load private key.", APPNAME,
 			   MB_OK | MB_ICONERROR);
 		return;
 	    }
 	    /* For our purposes we want the blob prefixed with its length */
-	    blob2 = smalloc(bloblen+4);
+	    blob2 = snewn(bloblen+4, unsigned char);
 	    PUT_32BIT(blob2, bloblen);
 	    memcpy(blob2 + 4, blob, bloblen);
 	    sfree(blob);
@@ -462,12 +467,12 @@ static void add_keyfile(char *filename)
     }
 
     if (type == SSH_KEYTYPE_SSH1)
-	needs_pass = rsakey_encrypted(filename, &comment);
+	needs_pass = rsakey_encrypted(&filename, &comment);
     else
-	needs_pass = ssh2_userkey_encrypted(filename, &comment);
+	needs_pass = ssh2_userkey_encrypted(&filename, &comment);
     attempts = 0;
     if (type == SSH_KEYTYPE_SSH1)
-	rkey = smalloc(sizeof(*rkey));
+	rkey = snew(struct RSAKey);
     pps.passphrase = passphrase;
     pps.comment = comment;
     original_pass = 0;
@@ -494,9 +499,9 @@ static void add_keyfile(char *filename)
 	} else
 	    *passphrase = '\0';
 	if (type == SSH_KEYTYPE_SSH1)
-	    ret = loadrsakey(filename, rkey, passphrase);
+	    ret = loadrsakey(&filename, rkey, passphrase, NULL);
 	else {
-	    skey = ssh2_load_userkey(filename, passphrase);
+	    skey = ssh2_load_userkey(&filename, passphrase, NULL);
 	    if (skey == SSH2_WRONG_PASSPHRASE)
 		ret = -1;
 	    else if (!skey)
@@ -526,7 +531,7 @@ static void add_keyfile(char *filename)
 	if (already_running) {
 	    unsigned char *request, *response;
 	    void *vresponse;
-	    int reqlen, clen, resplen;
+	    int reqlen, clen, resplen, ret;
 
 	    clen = strlen(rkey->comment);
 
@@ -540,7 +545,7 @@ static void add_keyfile(char *filename)
 		ssh1_bignum_length(rkey->q) + 4 + clen	/* comment */
 		;
 
-	    request = smalloc(reqlen);
+	    request = snewn(reqlen, unsigned char);
 
 	    request[4] = SSH1_AGENTC_ADD_RSA_IDENTITY;
 	    reqlen = 5;
@@ -559,7 +564,9 @@ static void add_keyfile(char *filename)
 	    reqlen += 4 + clen;
 	    PUT_32BIT(request, reqlen - 4);
 
-	    agent_query(request, reqlen, &vresponse, &resplen);
+	    ret = agent_query(request, reqlen, &vresponse, &resplen,
+			      NULL, NULL);
+	    assert(ret == 1);
 	    response = vresponse;
 	    if (resplen < 5 || response[4] != SSH_AGENT_SUCCESS)
 		MessageBox(NULL, "The already running Pageant "
@@ -576,7 +583,7 @@ static void add_keyfile(char *filename)
 	if (already_running) {
 	    unsigned char *request, *response;
 	    void *vresponse;
-	    int reqlen, alglen, clen, keybloblen, resplen;
+	    int reqlen, alglen, clen, keybloblen, resplen, ret;
 	    alglen = strlen(skey->alg->name);
 	    clen = strlen(skey->comment);
 
@@ -588,7 +595,7 @@ static void add_keyfile(char *filename)
 		4 + clen	       /* comment */
 		;
 
-	    request = smalloc(reqlen);
+	    request = snewn(reqlen, unsigned char);
 
 	    request[4] = SSH2_AGENTC_ADD_IDENTITY;
 	    reqlen = 5;
@@ -604,7 +611,9 @@ static void add_keyfile(char *filename)
 	    PUT_32BIT(request, reqlen - 4);
 	    reqlen += clen + 4;
 
-	    agent_query(request, reqlen, &vresponse, &resplen);
+	    ret = agent_query(request, reqlen, &vresponse, &resplen,
+			      NULL, NULL);
+	    assert(ret == 1);
 	    response = vresponse;
 	    if (resplen < 5 || response[4] != SSH_AGENT_SUCCESS)
 		MessageBox(NULL, "The already running Pageant "
@@ -647,7 +656,7 @@ static void *make_keylist1(int *length)
     }
 
     /* Allocate the buffer. */
-    p = ret = smalloc(len);
+    p = ret = snewn(len, unsigned char);
     if (length) *length = len;
 
     PUT_32BIT(p, nkeys);
@@ -692,7 +701,7 @@ static void *make_keylist2(int *length)
     }
 
     /* Allocate the buffer. */
-    p = ret = smalloc(len);
+    p = ret = snewn(len, unsigned char);
     if (length) *length = len;
 
     /*
@@ -729,16 +738,17 @@ static void *get_keylist1(void)
     if (already_running) {
 	unsigned char request[5], *response;
 	void *vresponse;
-	int resplen;
+	int resplen, retval;
 	request[4] = SSH1_AGENTC_REQUEST_RSA_IDENTITIES;
 	PUT_32BIT(request, 4);
 
-	agent_query(request, 5, &vresponse, &resplen);
+	retval = agent_query(request, 5, &vresponse, &resplen, NULL, NULL);
+	assert(retval == 1);
 	response = vresponse;
 	if (resplen < 5 || response[4] != SSH1_AGENT_RSA_IDENTITIES_ANSWER)
 	    return NULL;
 
-	ret = smalloc(resplen-5);
+	ret = snewn(resplen-5, unsigned char);
 	memcpy(ret, response+5, resplen-5);
 	sfree(response);
     } else {
@@ -759,17 +769,18 @@ static void *get_keylist2(void)
     if (already_running) {
 	unsigned char request[5], *response;
 	void *vresponse;
-	int resplen;
+	int resplen, retval;
 
 	request[4] = SSH2_AGENTC_REQUEST_IDENTITIES;
 	PUT_32BIT(request, 4);
 
-	agent_query(request, 5, &vresponse, &resplen);
+	retval = agent_query(request, 5, &vresponse, &resplen, NULL, NULL);
+	assert(retval == 1);
 	response = vresponse;
 	if (resplen < 5 || response[4] != SSH2_AGENT_IDENTITIES_ANSWER)
 	    return NULL;
 
-	ret = smalloc(resplen-5);
+	ret = snewn(resplen-5, unsigned char);
 	memcpy(ret, response+5, resplen-5);
 	sfree(response);
     } else {
@@ -921,7 +932,7 @@ static void answer_msg(void *msg)
 	    struct RSAKey *key;
 	    char *comment;
             int commentlen;
-	    key = smalloc(sizeof(struct RSAKey));
+	    key = snew(struct RSAKey);
 	    memset(key, 0, sizeof(struct RSAKey));
 	    p += makekey(p, key, NULL, 1);
 	    p += makeprivate(p, key);
@@ -929,7 +940,7 @@ static void answer_msg(void *msg)
 	    p += ssh1_read_bignum(p, &key->p);	/* p */
 	    p += ssh1_read_bignum(p, &key->q);	/* q */
             commentlen = GET_32BIT(p);
-	    comment = smalloc(commentlen+1);
+	    comment = snewn(commentlen+1, char);
 	    if (comment) {
 		memcpy(comment, p + 4, commentlen);
                 comment[commentlen] = '\0';
@@ -957,7 +968,7 @@ static void answer_msg(void *msg)
 	    int alglen, commlen;
 	    int bloblen;
 
-	    key = smalloc(sizeof(struct ssh2_userkey));
+	    key = snew(struct ssh2_userkey);
 
 	    alglen = GET_32BIT(p);
 	    p += 4;
@@ -985,7 +996,7 @@ static void answer_msg(void *msg)
 	    commlen = GET_32BIT(p);
 	    p += 4;
 
-	    comment = smalloc(commlen + 1);
+	    comment = snewn(commlen + 1, char);
 	    if (comment) {
 		memcpy(comment, p, commlen);
 		comment[commlen] = '\0';
@@ -1230,7 +1241,7 @@ static void prompt_add_keyfile(void)
 {
     OPENFILENAME of;
     char filename[FILENAME_MAX];
-    char *filelist = smalloc(8192);
+    char *filelist = snewn(8192, char);
     char *filewalker;
     int n, dirlen;
 	
@@ -1241,7 +1252,8 @@ static void prompt_add_keyfile(void)
     of.lStructSize = sizeof(of);
 #endif
     of.hwndOwner = main_hwnd;
-    of.lpstrFilter = "PuTTY Private Key Files\0*.PPK\0AllFiles\0*\0\0\0";
+    of.lpstrFilter = "PuTTY Private Key Files (*.ppk)\0*.ppk\0"
+	"All Files (*.*)\0*\0\0\0";
     of.lpstrCustomFilter = NULL;
     of.nFilterIndex = 1;
     of.lpstrFile = filelist;
@@ -1254,7 +1266,7 @@ static void prompt_add_keyfile(void)
     if (GetOpenFileName(&of)) {
 	if(strlen(filelist) > of.nFileOffset)
 	    /* Only one filename returned? */
-	    add_keyfile(filelist);
+	    add_keyfile(filename_from_str(filelist));
 	else {
 	    /* we are returned a bunch of strings, end to
 	     * end. first string is the directory, the
@@ -1282,7 +1294,7 @@ static void prompt_add_keyfile(void)
 		memcpy(filename + dirlen, filewalker, n);
 		filewalker += n;
 
-		add_keyfile(filename);
+		add_keyfile(filename_from_str(filename));
 	    }
 	}
 
@@ -1376,7 +1388,7 @@ static int CALLBACK KeyListProc(HWND hwnd, UINT msg,
 		}
 
 		/* get item indices in an array */
-		selectedArray = smalloc(numSelected * sizeof(int));
+		selectedArray = snewn(numSelected, int);
 		SendDlgItemMessage(hwnd, 100, LB_GETSELITEMS,
 				numSelected, (WPARAM)selectedArray);
 		
@@ -1773,20 +1785,32 @@ void spawn_cmd(char *cmdline, char * args, int show)
 {
     if (ShellExecute(NULL, _T("open"), cmdline,
 		     args, NULL, show) <= (HINSTANCE) 32) {
-	TCHAR sMsg[140];
-	sprintf(sMsg, _T("Failed to run \"%.100s\", Error: %d"), cmdline,
-		(int)GetLastError());
-	MessageBox(NULL, sMsg, APPNAME, MB_OK | MB_ICONEXCLAMATION);
+	char *msg;
+	msg = dupprintf("Failed to run \"%.100s\", Error: %d", cmdline,
+			(int)GetLastError());
+	MessageBox(NULL, msg, APPNAME, MB_OK | MB_ICONEXCLAMATION);
+	sfree(msg);
     }
 }
 
+/*
+ * This is a can't-happen stub, since Pageant never makes
+ * asynchronous agent requests.
+ */
+void agent_schedule_callback(void (*callback)(void *, void *, int),
+			     void *callback_ctx, void *data, int len)
+{
+    assert(!"We shouldn't get here");
+}
+
 void cleanup_exit(int code) { exit(code); }
+
+int flags = FLAG_SYNCAGENT;
 
 int WINAPI WinMain(HINSTANCE inst, HINSTANCE prev, LPSTR cmdline, int show)
 {
     WNDCLASS wndclass;
     MSG msg;
-    OSVERSIONINFO osi;
     HMODULE advapi;
     char *command = NULL;
     int added_keys = 0;
@@ -1797,9 +1821,11 @@ int WINAPI WinMain(HINSTANCE inst, HINSTANCE prev, LPSTR cmdline, int show)
      * Determine whether we're an NT system (should have security
      * APIs) or a non-NT system (don't do security).
      */
-    memset(&osi, 0, sizeof(OSVERSIONINFO));
-    osi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-    if (GetVersionEx(&osi) && osi.dwPlatformId == VER_PLATFORM_WIN32_NT) {
+    if (!init_winver())
+    {
+	modalfatalbox("Windows refuses to report a version");
+    }
+    if (osVersion.dwPlatformId == VER_PLATFORM_WIN32_NT) {
 	has_security = TRUE;
     } else
 	has_security = FALSE;
@@ -1957,7 +1983,7 @@ int WINAPI WinMain(HINSTANCE inst, HINSTANCE prev, LPSTR cmdline, int show)
 		command = "";
 	    break;
 	} else {
-	    add_keyfile(argv[i]);
+	    add_keyfile(filename_from_str(argv[i]));
 	    added_keys = TRUE;
 	}
     }

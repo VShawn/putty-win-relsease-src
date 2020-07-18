@@ -2,8 +2,6 @@
  * PuTTY key generation front end.
  */
 
-#include <windows.h>
-#include <commctrl.h>
 #include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -12,7 +10,12 @@
 
 #include "putty.h"
 #include "ssh.h"
-#include "winstuff.h"
+
+#include <commctrl.h>
+
+#ifdef MSVC4
+#define ICON_BIG        1
+#endif
 
 #define WM_DONEKEY (WM_XUSER + 1)
 
@@ -21,6 +24,23 @@
 static int requested_help;
 
 static char *cmdline_keyfile = NULL;
+
+/*
+ * Print a modal (Really Bad) message box and perform a fatal exit.
+ */
+void modalfatalbox(char *fmt, ...)
+{
+    va_list ap;
+    char *stuff;
+
+    va_start(ap, fmt);
+    stuff = dupvprintf(fmt, ap);
+    va_end(ap);
+    MessageBox(NULL, stuff, "PuTTYgen Fatal Error",
+	       MB_SYSTEMMODAL | MB_ICONERROR | MB_OK);
+    sfree(stuff);
+    exit(1);
+}
 
 /* ----------------------------------------------------------------------
  * Progress report code. This is really horrible :-)
@@ -185,10 +205,11 @@ static int prompt_keyfile(HWND hwnd, char *dlgtitle,
 #endif
     of.hwndOwner = hwnd;
     if (ppk) {
-	of.lpstrFilter = "PuTTY Private Key Files\0*.PPK\0All Files\0*\0\0\0";
+	of.lpstrFilter = "PuTTY Private Key Files (*.ppk)\0*.ppk\0"
+	    "All Files (*.*)\0*\0\0\0";
 	of.lpstrDefExt = ".ppk";
     } else {
-	of.lpstrFilter = "All Files\0*\0\0\0";
+	of.lpstrFilter = "All Files (*.*)\0*\0\0\0";
     }
     of.lpstrCustomFilter = NULL;
     of.nFilterIndex = 1;
@@ -203,14 +224,6 @@ static int prompt_keyfile(HWND hwnd, char *dlgtitle,
 	return GetSaveFileName(&of);
     else
 	return GetOpenFileName(&of);
-}
-
-/*
- * This function is needed to link with the DES code. We need not
- * have it do anything at all.
- */
-void logevent(char *msg)
-{
 }
 
 /*
@@ -283,7 +296,7 @@ static int CALLBACK AboutProc(HWND hwnd, UINT msg,
 	    return 0;
 	  case 101:
 	    EnableWindow(hwnd, 0);
-	    DialogBox(hinst, MAKEINTRESOURCE(214), NULL, LicenceProc);
+	    DialogBox(hinst, MAKEINTRESOURCE(214), hwnd, LicenceProc);
 	    EnableWindow(hwnd, 1);
 	    SetActiveWindow(hwnd);
 	    return 0;
@@ -356,10 +369,8 @@ static void setupbigedit1(HWND hwnd, int id, int idstatic, struct RSAKey *key)
 
     dec1 = bignum_decimal(key->exponent);
     dec2 = bignum_decimal(key->modulus);
-    buffer = smalloc(strlen(dec1) + strlen(dec2) +
-		     strlen(key->comment) + 30);
-    sprintf(buffer, "%d %s %s %s",
-	    bignum_bitcount(key->modulus), dec1, dec2, key->comment);
+    buffer = dupprintf("%d %s %s %s", bignum_bitcount(key->modulus),
+		       dec1, dec2, key->comment);
     SetDlgItemText(hwnd, id, buffer);
     SetDlgItemText(hwnd, idstatic,
 		   "&Public key for pasting into authorized_keys file:");
@@ -377,8 +388,8 @@ static void setupbigedit2(HWND hwnd, int id, int idstatic,
     int i;
 
     pub_blob = key->alg->public_blob(key->data, &pub_len);
-    buffer = smalloc(strlen(key->alg->name) + 4 * ((pub_len + 2) / 3) +
-		     strlen(key->comment) + 3);
+    buffer = snewn(strlen(key->alg->name) + 4 * ((pub_len + 2) / 3) +
+		   strlen(key->comment) + 3, char);
     strcpy(buffer, key->alg->name);
     p = buffer + strlen(buffer);
     *p++ = ' ';
@@ -393,7 +404,7 @@ static void setupbigedit2(HWND hwnd, int id, int idstatic,
     strcpy(p, key->comment);
     SetDlgItemText(hwnd, id, buffer);
     SetDlgItemText(hwnd, idstatic, "&Public key for pasting into "
-		   "OpenSSH authorized_keys2 file:");
+		   "OpenSSH authorized_keys file:");
     sfree(pub_blob);
     sfree(buffer);
 }
@@ -613,7 +624,7 @@ void ui_set_state(HWND hwnd, struct MainDlgState *state, int status)
 }
 
 void load_key_file(HWND hwnd, struct MainDlgState *state,
-		   char *filename, int was_import_cmd)
+		   Filename filename, int was_import_cmd)
 {
     char passphrase[PASSPHRASE_MAXLEN];
     int needs_pass;
@@ -624,7 +635,7 @@ void load_key_file(HWND hwnd, struct MainDlgState *state,
     struct RSAKey newkey1;
     struct ssh2_userkey *newkey2 = NULL;
 
-    type = realtype = key_type(filename);
+    type = realtype = key_type(&filename);
     if (type != SSH_KEYTYPE_SSH1 &&
 	type != SSH_KEYTYPE_SSH2 &&
 	!import_possible(type)) {
@@ -644,12 +655,12 @@ void load_key_file(HWND hwnd, struct MainDlgState *state,
 
     comment = NULL;
     if (realtype == SSH_KEYTYPE_SSH1)
-	needs_pass = rsakey_encrypted(filename, &comment);
+	needs_pass = rsakey_encrypted(&filename, &comment);
     else if (realtype == SSH_KEYTYPE_SSH2)
 	needs_pass =
-	ssh2_userkey_encrypted(filename, &comment);
+	ssh2_userkey_encrypted(&filename, &comment);
     else
-	needs_pass = import_encrypted(filename, realtype,
+	needs_pass = import_encrypted(&filename, realtype,
 				      &comment);
     pps.passphrase = passphrase;
     pps.comment = comment;
@@ -668,17 +679,17 @@ void load_key_file(HWND hwnd, struct MainDlgState *state,
 	    *passphrase = '\0';
 	if (type == SSH_KEYTYPE_SSH1) {
 	    if (realtype == type)
-		ret = loadrsakey(filename, &newkey1,
-				 passphrase);
+		ret = loadrsakey(&filename, &newkey1,
+				 passphrase, NULL);
 	    else
-		ret = import_ssh1(filename, realtype,
+		ret = import_ssh1(&filename, realtype,
 				  &newkey1, passphrase);
 	} else {
 	    if (realtype == type)
-		newkey2 = ssh2_load_userkey(filename,
-					    passphrase);
+		newkey2 = ssh2_load_userkey(&filename,
+					    passphrase, NULL);
 	    else
-		newkey2 = import_ssh2(filename, realtype,
+		newkey2 = import_ssh2(&filename, realtype,
 				      passphrase);
 	    if (newkey2 == SSH2_WRONG_PASSPHRASE)
 		ret = -1;
@@ -805,8 +816,10 @@ static int CALLBACK MainDlgProc(HWND hwnd, UINT msg,
              */
         }
         requested_help = FALSE;
+	SendMessage(hwnd, WM_SETICON, (WPARAM) ICON_BIG,
+		    (LPARAM) LoadIcon(hinst, MAKEINTRESOURCE(200)));
 
-	state = smalloc(sizeof(*state));
+	state = snew(struct MainDlgState);
 	state->generation_thread_exists = FALSE;
 	state->collecting_entropy = FALSE;
 	state->entropy = NULL;
@@ -843,7 +856,7 @@ static int CALLBACK MainDlgProc(HWND hwnd, UINT msg,
 	    AppendMenu(menu1, MF_ENABLED, IDC_EXPORT_SSHCOM,
 		       "Export &ssh.com key");
 	    AppendMenu(menu, MF_POPUP | MF_ENABLED, (UINT) menu1,
-		       "&Conversions");
+		       "Con&versions");
 	    state->cvtmenu = menu1;
 
 	    menu1 = CreateMenu();
@@ -886,7 +899,7 @@ static int CALLBACK MainDlgProc(HWND hwnd, UINT msg,
 			"&Public key for pasting into authorized_keys file:",
 			IDC_PKSTATIC, IDC_KEYDISPLAY, 5);
 	    SendDlgItemMessage(hwnd, IDC_KEYDISPLAY, EM_SETREADONLY, 1, 0);
-	    staticedit(&cp, "Key fingerprint:", IDC_FPSTATIC,
+	    staticedit(&cp, "Key f&ingerprint:", IDC_FPSTATIC,
 		       IDC_FINGERPRINT, 75);
 	    SendDlgItemMessage(hwnd, IDC_FINGERPRINT, EM_SETREADONLY, 1,
 			       0);
@@ -932,7 +945,7 @@ static int CALLBACK MainDlgProc(HWND hwnd, UINT msg,
 	 * Load a key file if one was provided on the command line.
 	 */
 	if (cmdline_keyfile)
-	    load_key_file(hwnd, state, cmdline_keyfile, 0);
+	    load_key_file(hwnd, state, filename_from_str(cmdline_keyfile), 0);
 
 	return 1;
       case WM_MOUSEMOVE:
@@ -960,7 +973,7 @@ static int CALLBACK MainDlgProc(HWND hwnd, UINT msg,
 				   MAKELPARAM(0, PROGRESSRANGE));
 		SendDlgItemMessage(hwnd, IDC_PROGRESS, PBM_SETPOS, 0, 0);
 
-		params = smalloc(sizeof(*params));
+		params = snew(struct rsa_key_thread_params);
 		params->progressbar = GetDlgItem(hwnd, IDC_PROGRESS);
 		params->dialog = hwnd;
 		params->keysize = state->keysize;
@@ -1007,7 +1020,7 @@ static int CALLBACK MainDlgProc(HWND hwnd, UINT msg,
 		    int len = GetWindowTextLength(editctl);
 		    if (*state->commentptr)
 			sfree(*state->commentptr);
-		    *state->commentptr = smalloc(len + 1);
+		    *state->commentptr = snewn(len + 1, char);
 		    GetWindowText(editctl, *state->commentptr, len + 1);
 		    if (state->ssh2) {
 			setupbigedit2(hwnd, IDC_KEYDISPLAY, IDC_PKSTATIC,
@@ -1021,7 +1034,7 @@ static int CALLBACK MainDlgProc(HWND hwnd, UINT msg,
 	    break;
 	  case IDC_ABOUT:
 	    EnableWindow(hwnd, 0);
-	    DialogBox(hinst, MAKEINTRESOURCE(213), NULL, AboutProc);
+	    DialogBox(hinst, MAKEINTRESOURCE(213), hwnd, AboutProc);
 	    EnableWindow(hwnd, 1);
 	    SetActiveWindow(hwnd);
 	    return 0;
@@ -1036,6 +1049,9 @@ static int CALLBACK MainDlgProc(HWND hwnd, UINT msg,
             }
 	    return 0;
 	  case IDC_GENERATE:
+            if (HIWORD(wParam) != BN_CLICKED &&
+                HIWORD(wParam) != BN_DOUBLECLICKED)
+		break;
 	    state =
 		(struct MainDlgState *) GetWindowLong(hwnd, GWL_USERDATA);
 	    if (!state->generation_thread_exists) {
@@ -1079,8 +1095,8 @@ static int CALLBACK MainDlgProc(HWND hwnd, UINT msg,
 		state->entropy_required = (state->keysize / 2) * 2;
 		state->entropy_got = 0;
 		state->entropy_size = (state->entropy_required *
-				       sizeof(*state->entropy));
-		state->entropy = smalloc(state->entropy_size);
+				       sizeof(unsigned));
+		state->entropy = snewn(state->entropy_required, unsigned);
 
 		SendDlgItemMessage(hwnd, IDC_PROGRESS, PBM_SETRANGE, 0,
 				   MAKELPARAM(0, state->entropy_required));
@@ -1090,6 +1106,8 @@ static int CALLBACK MainDlgProc(HWND hwnd, UINT msg,
 	  case IDC_SAVE:
           case IDC_EXPORT_OPENSSH:
           case IDC_EXPORT_SSHCOM:
+	    if (HIWORD(wParam) != BN_CLICKED)
+		break;
 	    state =
 		(struct MainDlgState *) GetWindowLong(hwnd, GWL_USERDATA);
 	    if (state->key_exists) {
@@ -1146,30 +1164,33 @@ static int CALLBACK MainDlgProc(HWND hwnd, UINT msg,
 		    int ret;
 		    FILE *fp = fopen(filename, "r");
 		    if (fp) {
-			char buffer[FILENAME_MAX + 80];
+			char *buffer;
 			fclose(fp);
-			sprintf(buffer, "Overwrite existing file\n%.*s?",
-				FILENAME_MAX, filename);
+			buffer = dupprintf("Overwrite existing file\n%s?",
+					   filename);
 			ret = MessageBox(hwnd, buffer, "PuTTYgen Warning",
 					 MB_YESNO | MB_ICONWARNING);
+			sfree(buffer);
 			if (ret != IDYES)
 			    break;
 		    }
 
 		    if (state->ssh2) {
+			Filename fn = filename_from_str(filename);
                         if (type != realtype)
-                            ret = export_ssh2(filename, type, &state->ssh2key,
+                            ret = export_ssh2(&fn, type, &state->ssh2key,
                                               *passphrase ? passphrase : NULL);
                         else
-                            ret = ssh2_save_userkey(filename, &state->ssh2key,
+                            ret = ssh2_save_userkey(&fn, &state->ssh2key,
                                                     *passphrase ? passphrase :
                                                     NULL);
 		    } else {
+			Filename fn = filename_from_str(filename);
                         if (type != realtype)
-                            ret = export_ssh1(filename, type, &state->key,
+                            ret = export_ssh1(&fn, type, &state->key,
                                               *passphrase ? passphrase : NULL);
                         else
-                            ret = saversakey(filename, &state->key,
+                            ret = saversakey(&fn, &state->key,
                                              *passphrase ? passphrase : NULL);
 		    }
 		    if (ret <= 0) {
@@ -1180,6 +1201,8 @@ static int CALLBACK MainDlgProc(HWND hwnd, UINT msg,
 	    }
 	    break;
 	  case IDC_SAVEPUB:
+	    if (HIWORD(wParam) != BN_CLICKED)
+		break;
 	    state =
 		(struct MainDlgState *) GetWindowLong(hwnd, GWL_USERDATA);
 	    if (state->key_exists) {
@@ -1189,12 +1212,13 @@ static int CALLBACK MainDlgProc(HWND hwnd, UINT msg,
 		    int ret;
 		    FILE *fp = fopen(filename, "r");
 		    if (fp) {
-			char buffer[FILENAME_MAX + 80];
+			char *buffer;
 			fclose(fp);
-			sprintf(buffer, "Overwrite existing file\n%.*s?",
-				FILENAME_MAX, filename);
+			buffer = dupprintf("Overwrite existing file\n%s?",
+					   filename);
 			ret = MessageBox(hwnd, buffer, "PuTTYgen Warning",
 					 MB_YESNO | MB_ICONWARNING);
+			sfree(buffer);
 			if (ret != IDYES)
 			    break;
 		    }
@@ -1212,13 +1236,15 @@ static int CALLBACK MainDlgProc(HWND hwnd, UINT msg,
 	    break;
 	  case IDC_LOAD:
 	  case IDC_IMPORT:
+	    if (HIWORD(wParam) != BN_CLICKED)
+		break;
 	    state =
 		(struct MainDlgState *) GetWindowLong(hwnd, GWL_USERDATA);
 	    if (!state->generation_thread_exists) {
 		char filename[FILENAME_MAX];
 		if (prompt_keyfile(hwnd, "Load private key:",
 				   filename, 0, LOWORD(wParam)==IDC_LOAD))
-		    load_key_file(hwnd, state, filename,
+		    load_key_file(hwnd, state, filename_from_str(filename),
 				  LOWORD(wParam) != IDC_LOAD);
 	    }
 	    break;
@@ -1249,7 +1275,7 @@ static int CALLBACK MainDlgProc(HWND hwnd, UINT msg,
 	 * the user will immediately want to change it, which is
 	 * what we want :-)
 	 */
-	*state->commentptr = smalloc(30);
+	*state->commentptr = snewn(30, char);
 	{
 	    time_t t;
 	    struct tm *tm;

@@ -1,4 +1,4 @@
-\versionid $Id: errors.but,v 1.1 2002/10/01 16:27:36 simon Exp $
+\versionid $Id: errors.but,v 1.7 2003/07/12 13:25:43 jacob Exp $
 
 \C{errors} Common error messages
 
@@ -73,6 +73,18 @@ have configured PuTTY to consider strong enough.
 
 See \k{config-ssh-encryption} for more information on this message.
 
+\H{errors-toomanyauth} \q{Server sent disconnect message type 2
+(SSH_DISCONNECT_PROTOCOL_ERROR): "Too many authentication failures for root"}
+
+This message is produced by an OpenSSH (or Sun SSH) server if it
+receives more failed authentication attempts than it is willing to
+tolerate.  This can easily happen if you are using Pageant and have a
+large number of keys loaded into it.  This can be worked around on the
+server by disabling public-key authentication or (for Sun SSH only) by
+increasing \c{MaxAuthTries} in \c{sshd_config}.  Neither of these is a
+really satisfactory solution, and we hope to provide a better one in a
+future version of PuTTY.
+
 \H{errors-memory} \q{Out of memory}
 
 This occurs when PuTTY tries to allocate more memory than the system
@@ -93,7 +105,7 @@ memory} error.
 
 This can happen in SSH 2, if PuTTY and the server have not enabled
 encryption in the same way (see \k{faq-outofmem} in the FAQ). Some
-versions of OpenSSH have a knownq problem with this: see
+versions of OpenSSH have a known problem with this: see
 \k{faq-openssh-bad-openssl}.
 
 This can also happen in PSCP or PSFTP, if your login scripts on the
@@ -132,6 +144,24 @@ type of message, the first thing you should do is check your
 the server may have sent diagnostic messages explaining exactly what
 problem it had with your setup.
 
+\H{errors-access-denied} \q{Access denied}, \q{Authentication refused}
+
+Various forms of this error are printed in the PuTTY window, or
+written to the PuTTY Event Log (see \k{using-eventlog}) during
+authentication.
+
+If you see one of these messages, it means that the server has refused 
+all the forms of authentication PuTTY has tried and it has no further
+ideas.
+
+It may be worth checking the Event Log for diagnostic messages from
+the server giving more detail.
+
+This error can be caused by buggy SSH-1 servers that fail to cope with
+the various strategies we use for camouflaging passwords in transit.
+Upgrade your server, or use the workarounds described in
+\k{config-ssh-bug-ignore1} and possibly \k{config-ssh-bug-plainpw1}.
+
 \H{errors-crc} \q{Incorrect CRC received on packet} or \q{Incorrect
 MAC received on packet}
 
@@ -151,8 +181,12 @@ gone wrong in the encryption or decryption process. It's difficult
 to tell from this error message whether the problem is in the client
 or in the server.
 
-A known server problem which can cause this error is described in
-\k{faq-openssh-bad-openssl} in the FAQ.
+If you get this error, one thing you could try would be to fiddle
+with the setting of \q{Miscomputes SSH2 encryption keys} on the Bugs
+panel (see \k{config-ssh-bug-derivekey2}).
+
+Another known server problem which can cause this error is described
+in \k{faq-openssh-bad-openssl} in the FAQ.
 
 \H{errors-x11-proxy} \q{Authentication failed at PuTTY X11 proxy}
 
@@ -188,20 +222,15 @@ of \c{su} do it automatically.
 \H{errors-connaborted} \q{Network error: Software caused connection
 abort}
 
-In modern versions of PuTTY, you should not see this error.
+This error occurs when the Windows network code decides that your
+network connection is dead. For example, it will happen if you pull
+the network cable out of the back of an Ethernet-connected computer,
+or if Windows has any other similar reason to believe the entire
+network has become unreachable.
 
-Windows's documentation about this error condition is not very good,
-but as far as we can tell, this error occurs when PuTTY is listening
-on a port, another program makes a connection to that port, but
-closes the connection so fast that PuTTY has no time to answer it.
-
-PuTTY only ever listens on a port when it is doing local-to-remote
-port forwarding (see \k{using-port-forwarding}); and if an incoming
-connection on that port receives this error, PuTTY should simply
-close the connection and continue without error.
-
-If you see this error in PuTTY 0.53 or above, we would welcome a
-report of the circumstances.
+We are not aware of any reason why this error might occur that would
+represent a bug in PuTTY. The problem is between you, your Windows
+system, your network and the remote system.
 
 \H{errors-connreset} \q{Network error: Connection reset by peer}
 
@@ -226,3 +255,14 @@ access.
 Check that you are connecting with the correct protocol (SSH, Telnet
 or Rlogin), and check that the port number is correct. If that
 fails, consult the administrator of your server.
+
+\H{errors-conntimedout} \q{Network error: Connection timed out}
+
+This error means that the network connection PuTTY tried to make to
+your server received no response at all from the server. Usually
+this happens because the server machine is completely isolated from
+the network, or because it is turned off.
+
+Check that you have correctly entered the host name or IP address of
+your server machine. If that fails, consult the administrator of
+your server.

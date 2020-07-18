@@ -1,4 +1,4 @@
-\versionid $Id: config.but,v 1.42 2002/09/26 18:37:33 simon Exp $
+\versionid $Id: config.but,v 1.74 2004/02/07 23:49:21 jacob Exp $
 
 \C{config} Configuring PuTTY
 
@@ -88,6 +88,13 @@ name in the list box, and then press the \q{Delete} button.
 Each saved session is independent of the Default Settings
 configuration. If you change your preferences and update Default
 Settings, you must also update every saved session separately.
+
+Saved sessions are stored in the Registry, at the location
+
+\c HKEY_CURRENT_USER\Software\SimonTatham\PuTTY\Sessions
+
+If you need to store them in a file, you could try the method
+described in \k{config-file}.
 
 \S{config-closeonexit} \q{Close Window on Exit}
 
@@ -214,10 +221,11 @@ find the screen scrolling up when it looks as if it shouldn't, you
 could try turning this option off.
 
 Auto wrap mode can be turned on and off by control sequences sent by
-the server. This configuration option only controls the \e{default}
-state. If you modify this option in mid-session using \q{Change
-Settings}, you will need to reset the terminal (see
-\k{reset-terminal}) before the change takes effect.
+the server. This configuration option controls the \e{default}
+state, which will be restored when you reset the terminal (see
+\k{reset-terminal}). However, if you modify this option in
+mid-session using \q{Change Settings}, it will take effect
+immediately.
 
 \S{config-decom} \q{DEC Origin Mode initially on}
 
@@ -243,10 +251,11 @@ like the wrong part of the screen, you could try turning DEC Origin
 Mode on to see whether that helps.
 
 DEC Origin Mode can be turned on and off by control sequences sent
-by the server. This configuration option only controls the
-\e{default} state. If you modify this option in mid-session using
-\q{Change Settings}, you will need to reset the terminal (see
-\k{reset-terminal}) before the change takes effect.
+by the server. This configuration option controls the \e{default}
+state, which will be restored when you reset the terminal (see
+\k{reset-terminal}). However, if you modify this option in
+mid-session using \q{Change Settings}, it will take effect
+immediately.
 
 \S{config-crlf} \q{Implicit CR in every LF}
 
@@ -291,10 +300,11 @@ default background colour. With this option enabled, it is done in
 the \e{current} background colour.
 
 Background-colour erase can be turned on and off by control
-sequences sent by the server. This configuration option only
-controls the \e{default} state. If you modify this option in
-mid-session using \q{Change Settings}, you will need to reset the
-terminal (see \k{reset-terminal}) before the change takes effect.
+sequences sent by the server. This configuration option controls the
+\e{default} state, which will be restored when you reset the
+terminal (see \k{reset-terminal}). However, if you modify this
+option in mid-session using \q{Change Settings}, it will take effect
+immediately.
 
 \S{config-blink} \q{Enable blinking text}
 
@@ -309,10 +319,11 @@ text blink, PuTTY will instead display the text with a bolded
 background colour.
 
 Blinking text can be turned on and off by control sequences sent by
-the server. This configuration option only controls the \e{default}
-state. If you modify this option in mid-session using \q{Change
-Settings}, you will need to reset the terminal (see
-\k{reset-terminal}) before the change takes effect.
+the server. This configuration option controls the \e{default}
+state, which will be restored when you reset the terminal (see
+\k{reset-terminal}). However, if you modify this option in
+mid-session using \q{Change Settings}, it will take effect
+immediately.
 
 \S{config-answerback} \q{Answerback to ^E}
 
@@ -618,10 +629,14 @@ on a terminal bell:
 the server can send as many Control-G characters as it likes and
 nothing at all will happen.
 
-\b \q{Play Windows Default Sound} is the default setting. It causes
-the Windows \q{Default Beep} sound to be played. To change what this
-sound is, or to test it if nothing seems to be happening, use the
-Sound configurer in the Windows Control Panel.
+\b \q{Make default system alert sound} is the default setting. It
+causes the Windows \q{Default Beep} sound to be played. To change
+what this sound is, or to test it if nothing seems to be happening,
+use the Sound configurer in the Windows Control Panel.
+
+\b \q{Visual bell} is a silent alternative to a beeping computer. In
+this mode, when the server sends a Control-G, the whole PuTTY window
+will flash white for a fraction of a second.
 
 \b \q{Play a custom sound file} allows you to specify a particular
 sound file to be used by PuTTY alone, or even by a particular
@@ -629,10 +644,6 @@ individual PuTTY session. This allows you to distinguish your PuTTY
 beeps from any other beeps on the system. If you select this option,
 you will also need to enter the name of your sound file in the edit
 control \q{Custom sound file to play as a bell}.
-
-\b \q{Visual bell} is a silent alternative to a beeping computer. In
-this mode, when the server sends a Control-G, the whole PuTTY window
-will flash white for a fraction of a second.
 
 \S{config-belltaskbar} \q{Taskbar/caption indication on bell}
 
@@ -685,6 +696,11 @@ with the settings, you can configure the details: how many bells
 constitute an overload, how short a time period they have to arrive
 in to do so, and how much silent time is required before the
 overload feature will deactivate itself.
+
+Bell overload mode is always deactivated by any keypress in the
+terminal. This means it can respond to large unexpected streams of
+data, but does not interfere with ordinary command-line activities
+that generate beeps (such as filename completion).
 
 \H{config-features} The Features panel
 
@@ -759,6 +775,26 @@ PuTTY has the ability to change the window title in response to
 commands from the server. If you find PuTTY is doing this
 unexpectedly or inconveniently, you can tell PuTTY not to respond to
 those server commands.
+
+\S{config-features-qtitle} Disabling remote window title querying
+
+\cfg{winhelp-topic}{features.qtitle}
+
+PuTTY can optionally provide the xterm service of allowing server
+applications to find out the local window title. This feature is
+disabled by default, but you can turn it on if you really want it.
+
+NOTE that this feature is a \e{potential security hazard}. If a
+malicious application can write data to your terminal (for example,
+if you merely \c{cat} a file owned by someone else on the server
+machine), it can change your window title (unless you have disabled
+this as mentioned in \k{config-features-retitle}) and then use this
+service to have the new window title sent back to the server as if
+typed at the keyboard. This allows an attacker to fake keypresses
+and potentially cause your server-side applications to do things you
+didn't want. Therefore this feature is disabled by default, and we
+recommend you do not turn it on unless you \e{really} know what you
+are doing.
 
 \S{config-features-dbackspace} Disabling destructive backspace
 
@@ -847,6 +883,22 @@ terminal contents. You can disable this behaviour by turning off
 screen revert when you press a key, by turning on \q{Reset
 scrollback on keypress}.
 
+\S{config-erasetoscrollback} \q{Push erased text into scrollback}
+
+\cfg{winhelp-topic}{window.erased}
+
+When this option is enabled, the contents of the terminal screen
+will be pushed into the scrollback when a server-side application
+clears the screen, so that your scrollback will contain a better
+record of what was on your screen in the past.
+
+If the application switches to the alternate screen (see
+\k{config-features-altscreen} for more about this), then the
+contents of the primary screen will be visible in the scrollback
+until the application switches back again.
+
+This option is enabled by default.
+
 \H{config-appearance} The Appearance panel
 
 The Appearance configuration panel allows you to control aspects of
@@ -873,30 +925,6 @@ terminal window uses to display the text in the session. You will be
 offered a choice from all the fixed-width fonts installed on the
 system. (VT100-style terminal handling can only deal with fixed-
 width fonts.)
-
-\S{config-title} Controlling the window title
-
-\cfg{winhelp-topic}{appearance.title}
-
-The \q{Window title} edit box allows you to set the title of the
-PuTTY window. By default the window title will contain the host name
-followed by \q{PuTTY}, for example \c{server1.example.com - PuTTY}.
-If you want a different window title, this is where to set it.
-
-PuTTY allows the server to send \c{xterm} control sequences which
-modify the title of the window in mid-session. There is also an
-\c{xterm} sequence to modify the title of the window's \e{icon}.
-This makes sense in a windowing system where the window becomes an
-icon when minimised, such as Windows 3.1 or most X Window System
-setups; but in the Windows 95-like user interface it isn't as
-applicable. By default PuTTY's window title and Taskbar caption will
-change into the server-supplied icon title if you minimise the PuTTY
-window, and change back to the server-supplied window title if you
-restore it. (If the server has not bothered to supply a window or
-icon title, none of this will happen.) By checking the box marked
-\q{Avoid ever using icon title}, you can arrange that PuTTY will
-always display the window title, and completely ignore any icon
-titles the server sends it.
 
 \S{config-mouseptr} \q{Hide mouse pointer when typing in window}
 
@@ -932,6 +960,32 @@ it to zero, or increase it further.
 
 The Behaviour configuration panel allows you to control aspects of
 the behaviour of PuTTY's window.
+
+\S{config-title} Controlling the window title
+
+\cfg{winhelp-topic}{appearance.title}
+
+The \q{Window title} edit box allows you to set the title of the
+PuTTY window. By default the window title will contain the host name
+followed by \q{PuTTY}, for example \c{server1.example.com - PuTTY}.
+If you want a different window title, this is where to set it.
+
+PuTTY allows the server to send \c{xterm} control sequences which
+modify the title of the window in mid-session. There is also an
+\c{xterm} sequence to modify the title of the window's \e{icon}.
+This makes sense in a windowing system where the window becomes an
+icon when minimised, such as Windows 3.1 or most X Window System
+setups; but in the Windows 95-like user interface it isn't as
+applicable.
+
+By default, PuTTY only uses the server-supplied \e{window} title, and
+ignores the icon title entirely. If for some reason you want to see
+both titles, check the box marked \q{Separate window and icon titles}.
+If you do this, PuTTY's window title and Taskbar caption will
+change into the server-supplied icon title if you minimise the PuTTY
+window, and change back to the server-supplied window title if you
+restore it. (If the server has not bothered to supply a window or
+icon title, none of this will happen.)
 
 \S{config-warnonclose} \q{Warn before closing window}
 
@@ -1037,9 +1091,10 @@ If you select \q{UTF-8} as a character set you can use this mode.
 Not all server-side applications will support it.
 
 If you need support for a numeric code page which is not listed in
-the drop-down list, such as code page 866, then you should be able
-to enter its name manually (\c{CP866} for example) in the list box
-and get the right result.
+the drop-down list, such as code page 866, then you can try entering
+its name manually (\c{CP866} for example) in the list box. If the
+underlying version of Windows has the appropriate translation table
+installed, PuTTY will use it.
 
 \S{config-cyr} \q{Caps Lock acts as Cyrillic switch}
 
@@ -1087,26 +1142,31 @@ You should use this option if none of the other options works.
 in Unicode. For good Unicode-supporting fonts this is probably the
 most reliable and functional option.
 
-\H{config-selection} The Selection panel
-
-The Selection panel allows you to control the way copy and paste
-work in the PuTTY window.
-
-\S{config-linedrawpaste} Controlling the pasting of line drawing
+\S{config-linedrawpaste} Controlling copy and paste of line drawing
 characters
 
 \cfg{winhelp-topic}{selection.linedraw}
 
 By default, when you copy and paste a piece of the PuTTY screen that
-contains VT100 line and box drawing characters, PuTTY will translate
-them into the \q{poor man's} line-drawing characters \c{+}, \c{-}
-and \c{|}. The checkbox \q{Don't translate line drawing chars}
-disables this feature, so line-drawing characters will be pasted as
-if they were in the normal character set. This will typically mean
-they come out mostly as \c{q} and \c{x}, with a scattering of
-\c{jklmntuvw} at the corners. This might be useful if you were
-trying to recreate the same box layout in another program, for
-example.
+contains VT100 line and box drawing characters, PuTTY will paste
+them in the form they appear on the screen: either Unicode line
+drawing code points, or the \q{poor man's} line-drawing characters
+\c{+}, \c{-} and \c{|}. The checkbox \q{Copy and paste VT100 line
+drawing chars as lqqqk} disables this feature, so line-drawing
+characters will be pasted as the ASCII characters that were printed
+to produce them. This will typically mean they come out mostly as
+\c{q} and \c{x}, with a scattering of \c{jklmntuvw} at the corners.
+This might be useful if you were trying to recreate the same box
+layout in another program, for example.
+
+Note that this option only applies to line-drawing characters which
+\e{were} printed by using the VT100 mechanism. Line-drawing
+characters displayed using Unicode will paste as Unicode always.
+
+\H{config-selection} The Selection panel
+
+The Selection panel allows you to control the way copy and paste
+work in the PuTTY window.
 
 \S{config-rtfpaste} Pasting in Rich Text Format
 
@@ -1127,18 +1187,24 @@ disabled.
 
 \cfg{winhelp-topic}{selection.buttons}
 
-PuTTY's copy and paste mechanism is modelled on the Unix \c{xterm}
-application. The X Window System uses a three-button mouse, and the
-convention is that the left button selects, the right button extends
-an existing selection, and the middle button pastes.
+PuTTY's copy and paste mechanism is by default modelled on the Unix
+\c{xterm} application. The X Window System uses a three-button mouse,
+and the convention is that the left button selects, the right button
+extends an existing selection, and the middle button pastes.
 
-Windows typically only has two mouse buttons, so in PuTTY's default
-configuration, the \e{right} button pastes, and the \e{middle}
-button (if you have one) extends a selection.
+Windows often only has two mouse buttons, so in PuTTY's default
+configuration (\q{Compromise}), the \e{right} button pastes, and the
+\e{middle} button (if you have one) extends a selection.
 
 If you have a three-button mouse and you are already used to the
 \c{xterm} arrangement, you can select it using the \q{Action of
 mouse buttons} control.
+
+Alternatively, with the \q{Windows} option selected, the middle
+button extends, and the right button brings up a context menu (on
+which one of the options is \q{Paste}). (This context menu is always
+available by holding down Ctrl and right-clicking, regardless of the
+setting of this option.)
 
 \S{config-mouseshift} \q{Shift overrides application's use of mouse}
 
@@ -1219,10 +1285,11 @@ This mechanism currently only covers ASCII characters, because it
 isn't feasible to expand the list to cover the whole of Unicode.
 
 Character class definitions can be modified by control sequences
-sent by the server. This configuration option only controls the
-\e{default} state. If you modify this option in mid-session using
-\q{Change Settings}, you will need to reset the terminal (see
-\k{reset-terminal}) before the change takes effect.
+sent by the server. This configuration option controls the
+\e{default} state, which will be restored when you reset the
+terminal (see \k{reset-terminal}). However, if you modify this
+option in mid-session using \q{Change Settings}, it will take effect
+immediately.
 
 \H{config-colours} The Colours panel
 
@@ -1255,6 +1322,18 @@ If you are not getting the colours you ask for on an 8-bit display,
 you can try enabling this option. However, be warned that it's never
 worked very well.
 
+\S{config-syscolour} \q{Use system colours}
+
+\cfg{winhelp-topic}{colours.system}
+
+Enabling this option will cause PuTTY to ignore the configured colours
+for \q{Default Background/Foreground} and \q{Cursor Colour/Text} (see
+\k{config-colourcfg}), instead going with the system-wide defaults.
+
+Note that non-bold and bold text will be the same colour if this
+option is enabled. You might want to change to indicating bold text
+by font changes (see \k{config-boldcolour}).
+
 \S{config-colourcfg} Adjusting the colours in the terminal window
 
 \cfg{winhelp-topic}{colours.config}
@@ -1270,9 +1349,10 @@ colour to go in place of the old one.
 PuTTY allows you to set the cursor colour, the default foreground
 and background, and the precise shades of all the ANSI configurable
 colours (black, red, green, yellow, blue, magenta, cyan, and white).
-In addition, if you have selected \q{Bolded text is a different
-colour}, you can also modify the precise shades used for the bold
-versions of these colours.
+You can also modify the precise shades used for the bold versions of
+these colours; these are used to display bold text if you have
+selected \q{Bolded text is a different colour}, and can also be used
+if the server asks specifically to use them.
 
 \H{config-connection} The Connection panel
 
@@ -1396,8 +1476,8 @@ connection.
 web server supporting the HTTP \cw{CONNECT} command, as documented
 in \W{http://www.ietf.org/rfc/rfc2817.txt}{RFC 2817}.
 
-\b Selecting \q{SOCKS} allows you to proxy your connections through
-a SOCKS server.
+\b Selecting \q{SOCKS 4} or \q{SOCKS 5} allows you to proxy your
+connections through a SOCKS server.
 
 \b Many firewalls implement a less formal type of proxy in which a
 user can make a Telnet connection directly to the firewall machine
@@ -1434,6 +1514,49 @@ from proxying.
 
 This excludes both of the above ranges at once.
 
+Connections to the local host (the host name \c{localhost}, and any
+loopback IP address) are never proxied, even if the proxy exclude
+list does not explicitly contain them. It is very unlikely that this
+behaviour would ever cause problems, but if it does you can change
+it by enabling \q{Consider proxying local host connections}.
+
+Note that if you are doing DNS at the proxy (see
+\k{config-proxy-dns}), you should make sure that your proxy
+exclusion settings do not depend on knowing the IP address of a
+host. If the name is passed on to the proxy without PuTTY looking it
+up, it will never know the IP address and cannot check it against
+your list.
+
+\S{config-proxy-dns} Name resolution when using a proxy
+
+\cfg{winhelp-topic}{proxy.dns}
+
+If you are using a proxy to access a private network, it can make a
+difference whether DNS name resolution is performed by PuTTY itself
+(on the client machine) or performed by the proxy.
+
+The \q{Do DNS name lookup at proxy end} configuration option allows
+you to control this. If you set it to \q{No}, PuTTY will always do
+its own DNS, and will always pass an IP address to the proxy. If you
+set it to \q{Yes}, PuTTY will always pass host names straight to the
+proxy without trying to look them up first.
+
+If you set this option to \q{Auto} (the default), PuTTY will do
+something it considers appropriate for each type of proxy. Telnet
+and HTTP proxies will have host names passed straight to them; SOCKS
+proxies will not.
+
+Note that if you are doing DNS at the proxy, you should make sure
+that your proxy exclusion settings (see \k{config-proxy-exclude}) do
+not depend on knowing the IP address of a host. If the name is
+passed on to the proxy without PuTTY looking it up, it will never
+know the IP address and cannot check it against your list.
+
+The original SOCKS 4 protocol does not support proxy-side DNS. There
+is a protocol extension (SOCKS 4A) which does support it, but not
+all SOCKS 4 servers provide this extension. If you enable proxy DNS
+and your SOCKS 4 server cannot deal with it, this might be why.
+
 \S{config-proxy-auth} Username and password
 
 \cfg{winhelp-topic}{proxy.auth}
@@ -1441,7 +1564,7 @@ This excludes both of the above ranges at once.
 If your proxy requires authentication, you can enter a username and
 a password in the \q{Username} and \q{Password} boxes.
 
-Authentication is not supported for all forms of proxy:
+Authentication is not fully supported for all forms of proxy:
 
 \b Username and password authentication is supported for HTTP
 proxies and SOCKS 5 proxies.
@@ -1449,7 +1572,8 @@ proxies and SOCKS 5 proxies.
 \b SOCKS 4 can use the \q{Username} field, but does not support
 passwords.
 
-\b Authentication is meaningless in Telnet proxies.
+\b You can specify a way to include a username and password in the
+Telnet proxy command (see \k{config-proxy-command}).
 
 \S{config-proxy-command} Specifying the Telnet proxy command
 
@@ -1467,17 +1591,20 @@ other character. \c{\\\\} is used to encode the \c{\\} character
 itself.
 
 Also, the special strings \c{%host} and \c{%port} will be replaced
-by the host name and port number you want to connect to. To get a
-literal \c{%} sign, enter \c{%%}.
+by the host name and port number you want to connect to. The strings
+\c{%user} and \c{%pass} will be replaced by the proxy username and 
+password you specify. To get a literal \c{%} sign, enter \c{%%}.
 
-\S{config-proxy-socksver} Selecting the version of the SOCKS protocol
+If the Telnet proxy server prompts for a username and password
+before commands can be sent, you can use a command such as:
 
-\cfg{winhelp-topic}{proxy.socksver}
+\c %user\n%pass\nconnect %host %port\n
 
-SOCKS servers exist in two versions: version 5
-(\W{http://www.ietf.org/rfc/rfc1928.txt}{RFC 1928}) and the earlier
-version 4. The \q{SOCKS Version} radio buttons allow you to select
-which one to use, if you have selected the SOCKS proxy type.
+This will send your username and password as the first two lines to 
+the proxy, followed by a command to connect to the desired host and 
+port. Note that if you do not include the \c{%user} or \c{%pass}
+tokens in the Telnet command, then the \q{Username} and \q{Password}
+configuration fields will be ignored.
 
 \H{config-telnet} The Telnet panel
 
@@ -1696,6 +1823,16 @@ you make an SSH connection, PuTTY will search down the list from the
 top until it finds an algorithm supported by the server, and then
 use that.
 
+PuTTY currently supports the following algorithms:
+
+\b AES (Rijndael) - 256, 192, or 128-bit CBC (SSH-2 only)
+
+\b Blowfish - 128-bit CBC
+
+\b Triple-DES - 168-bit CBC
+
+\b Single-DES - 56-bit CBC (see below for SSH-2)
+
 If the algorithm PuTTY finds is below the \q{warn below here} line,
 you will see a warning box when you make the connection:
 
@@ -1717,12 +1854,12 @@ separate configuration of the preference orders. As a result you may
 get two warnings similar to the one above, possibly with different
 encryptions.
 
-Single-DES is not supported natively in the SSH 2 draft protocol
-standards. One or two server implementations do support it, by a
-non-standard name. PuTTY can use single-DES to interoperate with
-these servers if you enable the \q{Enable non-standard single-DES in
+Single-DES is not recommended in the SSH 2 draft protocol
+standards, but one or two server implementations do support it.
+PuTTY can use single-DES to interoperate with
+these servers if you enable the \q{Enable legacy use of single-DES in
 SSH 2} option; by default this is disabled and PuTTY will stick to
-the standard.
+recommended ciphers.
 
 \H{config-ssh-auth} The Auth panel
 
@@ -1804,6 +1941,8 @@ This box is where you enter the name of your private key file if you
 are using public key authentication. See \k{pubkey} for information
 about public key authentication in SSH.
 
+This key must be in PuTTY's native format (\c{*.PPK}).
+
 \H{config-ssh-tunnels} The Tunnels panel
 
 The Tunnels panel allows you to configure tunnelling of other
@@ -1826,6 +1965,53 @@ display location} box.
 See \k{using-x-forwarding} for more information about X11
 forwarding.
 
+\S2{config-ssh-x11auth} Remote X11 authentication
+
+\cfg{winhelp-topic}{ssh.tunnels.x11auth}
+
+If you are using X11 forwarding, the virtual X server created on the
+SSH server machine will be protected by authorisation data. This
+data is invented, and checked, by PuTTY.
+
+The usual authorisation method used for this is called
+\cw{MIT-MAGIC-COOKIE-1}. This is a simple password-style protocol:
+the X client sends some cookie data to the server, and the server
+checks that it matches the real cookie. The cookie data is sent over
+an unencrypted X11 connection; so if you allow a client on a third
+machine to access the virtual X server, then the cookie will be sent
+in the clear.
+
+PuTTY offers the alternative protocol \cw{XDM-AUTHORIZATION-1}. This
+is a cryptographically authenticated protocol: the data sent by the
+X client is different every time, and it depends on the IP address
+and port of the client's end of the connection and is also stamped
+with the current time. So an eavesdropper who captures an
+\cw{XDM-AUTHORIZATION-1} string cannot immediately re-use it for
+their own X connection.
+
+PuTTY's support for \cw{XDM-AUTHORIZATION-1} is a somewhat
+experimental feature, and may encounter several problems:
+
+\b Some X clients probably do not even support
+\cw{XDM-AUTHORIZATION-1}, so they will not know what to do with the
+data PuTTY has provided.
+
+\b This authentication mechanism will only work in SSH v2. In SSH
+v1, the SSH server does not tell the client the source address of
+a forwarded connection in a machine-readable format, so it's
+impossible to verify the \cw{XDM-AUTHORIZATION-1} data.
+
+\b You may find this feature causes problems with some SSH servers,
+which will not clean up \cw{XDM-AUTHORIZATION-1} data after a
+session, so that if you then connect to the same server using
+a client which only does \cw{MIT-MAGIC-COOKIE-1} and are allocated
+the same remote display number, you might find that out-of-date
+authentication data is still present on your server and your X
+connections fail.
+
+PuTTY's default is \cw{MIT-MAGIC-COOKIE-1}. If you change it, you
+should be sure you know what you're doing.
+
 \S{config-ssh-portfwd} Port forwarding
 
 \cfg{winhelp-topic}{ssh.tunnels.portfwd}
@@ -1844,7 +2030,8 @@ To add a port forwarding:
 \b Set one of the \q{Local} or \q{Remote} radio buttons, depending
 on whether you want to forward a local port to a remote destination
 (\q{Local}) or forward a remote port to a local destination
-(\q{Remote}).
+(\q{Remote}). Alternatively, select \q{Dynamic} if you want PuTTY to
+provide a local SOCKS 4/4A/5 proxy on a local port.
 
 \b Enter a source port number into the \q{Source port} box. For
 local forwardings, PuTTY will listen on this port of your PC. For
@@ -1852,16 +2039,23 @@ remote forwardings, your SSH server will listen on this port of the
 remote machine. Note that most servers will not allow you to listen
 on port numbers less than 1024.
 
-\b Enter a hostname and port number separated by a colon, in the
-\q{Destination} box. Connections received on the source port will be
-directed to this destination. For example, to connect to a POP-3
-server, you might enter \c{popserver.example.com:110}.
+\b If you have selected \q{Local} or \q{Remote} (this step is not
+needed with \q{Dynamic}), enter a hostname and port number separated
+by a colon, in the \q{Destination} box. Connections received on the
+source port will be directed to this destination. For example, to
+connect to a POP-3 server, you might enter
+\c{popserver.example.com:110}.
 
 \b Click the \q{Add} button. Your forwarding details should appear
 in the list box.
 
 To remove a port forwarding, simply select its details in the list
 box, and click the \q{Remove} button.
+
+In the \q{Source port} box, you can also optionally enter an IP
+address to listen on, by specifying (for instance) \c{127.0.0.5:79}.
+See \k{using-port-forwarding} for more information on how this
+works and its restrictions.
 
 \S{config-ssh-portfwd-localhost} Controlling the visibility of
 forwarded ports
@@ -1876,7 +2070,7 @@ controls in the Tunnels panel to change this:
 \b The \q{Local ports accept connections from other hosts} option
 allows you to set up local-to-remote port forwardings in such a way
 that machines other than your client PC can connect to the forwarded
-port.
+port. (This also applies to dynamic SOCKS forwarding.)
 
 \b The \q{Remote ports do the same} option does the same thing for
 remote-to-local port forwardings (so that machines other than the
@@ -1993,7 +2187,7 @@ This is an SSH2-specific bug.
 
 \cfg{winhelp-topic}{ssh.bugs.derivekey2}
 
-Versions below 2.1.0 of the SSH server software from \cw{ssh.com}
+Versions below 2.0.11 of the SSH server software from \cw{ssh.com}
 compute the keys for the session encryption incorrectly. This
 problem can cause various error messages, such as \q{Incoming packet
 was garbled on decryption}, or possibly even \q{Out of memory}.
@@ -2041,6 +2235,24 @@ workaround, you need to enable it manually.
 
 This is an SSH2-specific bug.
 
+\S{config-ssh-bug-pksessid2} \q{Misuses the session ID in PK auth}
+
+\cfg{winhelp-topic}{ssh.bugs.pksessid2}
+
+Versions below 2.3 of OpenSSH require SSH2 public-key authentication
+to be done slightly differently: the data to be signed by the client
+contains the session ID formatted in a different way. If public-key
+authentication mysteriously does not work but the Event Log (see
+\k{using-eventlog}) thinks it has successfully sent a signature, it
+might be worth enabling the workaround for this bug to see if it
+helps.
+
+If this bug is detected, PuTTY will sign data in the way OpenSSH
+expects. If this bug is enabled when talking to a correct server,
+SSH2 public-key authentication will fail.
+
+This is an SSH2-specific bug.
+
 \H{config-file} Storing configuration in a file
 
 PuTTY does not currently support storing its configuration in a file
@@ -2058,7 +2270,7 @@ line options, so it's all automatic. Here is what you need in
 \c regedit /s putty.reg
 \c regedit /s puttyrnd.reg
 \c start /w putty.exe
-\c regedit /e puttynew.reg HKEY_CURRENT_USER\Software\SimonTatham\PuTTY
+\c regedit /ea puttynew.reg HKEY_CURRENT_USER\Software\SimonTatham\PuTTY
 \c copy puttynew.reg putty.reg
 \c del puttynew.reg
 \c regedit /s puttydel.reg

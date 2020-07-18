@@ -3,8 +3,6 @@
  * the console PuTTY tools
  */
 
-#include <windows.h>
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -15,6 +13,8 @@
 
 int console_batch_mode = FALSE;
 
+static void *console_logctx = NULL;
+
 /*
  * Clean up and exit.
  */
@@ -24,19 +24,16 @@ void cleanup_exit(int code)
      * Clean up.
      */
     sk_cleanup();
-    WSACleanup();
 
-    if (cfg.protocol == PROT_SSH) {
-	random_save_seed();
+    random_save_seed();
 #ifdef MSCRYPTOAPI
-	crypto_wrapup();
+    crypto_wrapup();
 #endif
-    }
 
     exit(code);
 }
 
-void verify_ssh_host_key(char *host, int port, char *keytype,
+void verify_ssh_host_key(void *frontend, char *host, int port, char *keytype,
 			 char *keystr, char *fingerprint)
 {
     int ret;
@@ -47,14 +44,14 @@ void verify_ssh_host_key(char *host, int port, char *keytype,
 	"The server's host key is not cached in the registry. You\n"
 	"have no guarantee that the server is the computer you\n"
 	"think it is.\n"
-	"The server's key fingerprint is:\n"
+	"The server's %s key fingerprint is:\n"
 	"%s\n"
 	"Connection abandoned.\n";
     static const char absentmsg[] =
 	"The server's host key is not cached in the registry. You\n"
 	"have no guarantee that the server is the computer you\n"
 	"think it is.\n"
-	"The server's key fingerprint is:\n"
+	"The server's %s key fingerprint is:\n"
 	"%s\n"
 	"If you trust this host, enter \"y\" to add the key to\n"
 	"PuTTY's cache and carry on connecting.\n"
@@ -71,7 +68,7 @@ void verify_ssh_host_key(char *host, int port, char *keytype,
 	"server administrator has changed the host key, or you\n"
 	"have actually connected to another computer pretending\n"
 	"to be the server.\n"
-	"The new key fingerprint is:\n"
+	"The new %s key fingerprint is:\n"
 	"%s\n"
 	"Connection abandoned.\n";
     static const char wrongmsg[] =
@@ -81,7 +78,7 @@ void verify_ssh_host_key(char *host, int port, char *keytype,
 	"server administrator has changed the host key, or you\n"
 	"have actually connected to another computer pretending\n"
 	"to be the server.\n"
-	"The new key fingerprint is:\n"
+	"The new %s key fingerprint is:\n"
 	"%s\n"
 	"If you were expecting this change and trust the new key,\n"
 	"enter \"y\" to update PuTTY's cache and continue connecting.\n"
@@ -106,18 +103,18 @@ void verify_ssh_host_key(char *host, int port, char *keytype,
 
     if (ret == 2) {		       /* key was different */
 	if (console_batch_mode) {
-	    fprintf(stderr, wrongmsg_batch, fingerprint);
+	    fprintf(stderr, wrongmsg_batch, keytype, fingerprint);
 	    cleanup_exit(1);
 	}
-	fprintf(stderr, wrongmsg, fingerprint);
+	fprintf(stderr, wrongmsg, keytype, fingerprint);
 	fflush(stderr);
     }
     if (ret == 1) {		       /* key was absent */
 	if (console_batch_mode) {
-	    fprintf(stderr, absentmsg_batch, fingerprint);
+	    fprintf(stderr, absentmsg_batch, keytype, fingerprint);
 	    cleanup_exit(1);
 	}
-	fprintf(stderr, absentmsg, fingerprint);
+	fprintf(stderr, absentmsg, keytype, fingerprint);
 	fflush(stderr);
     }
 
@@ -137,12 +134,16 @@ void verify_ssh_host_key(char *host, int port, char *keytype,
     }
 }
 
+void update_specials_menu(void *frontend)
+{
+}
+
 /*
  * Ask whether the selected cipher is acceptable (since it was
  * below the configured 'warn' threshold).
  * cs: 0 = both ways, 1 = client->server, 2 = server->client
  */
-void askcipher(char *ciphername, int cs)
+void askcipher(void *frontend, char *ciphername, int cs)
 {
     HANDLE hin;
     DWORD savemode, i;
@@ -192,7 +193,7 @@ void askcipher(char *ciphername, int cs)
  * Ask whether to wipe a session log file before writing to it.
  * Returns 2 for wipe, 1 for append, 0 for cancel (don't log).
  */
-int askappend(char *filename)
+int askappend(void *frontend, Filename filename)
 {
     HANDLE hin;
     DWORD savemode, i;
@@ -212,15 +213,12 @@ int askappend(char *filename)
 
     char line[32];
 
-    if (cfg.logxfovr != LGXF_ASK) {
-	return ((cfg.logxfovr == LGXF_OVR) ? 2 : 1);
-    }
     if (console_batch_mode) {
-	fprintf(stderr, msgtemplate_batch, FILENAME_MAX, filename);
+	fprintf(stderr, msgtemplate_batch, FILENAME_MAX, filename.path);
 	fflush(stderr);
 	return 0;
     }
-    fprintf(stderr, msgtemplate, FILENAME_MAX, filename);
+    fprintf(stderr, msgtemplate, FILENAME_MAX, filename.path);
     fflush(stderr);
 
     hin = GetStdHandle(STD_INPUT_HANDLE);
@@ -240,6 +238,13 @@ int askappend(char *filename)
 
 /*
  * Warn about the obsolescent key file format.
+ * 
+ * Uniquely among these functions, this one does _not_ expect a
+ * frontend handle. This means that if PuTTY is ported to a
+ * platform which requires frontend handles, this function will be
+ * an anomaly. Fortunately, the problem it addresses will not have
+ * been present on that platform, so it can plausibly be
+ * implemented as an empty function.
  */
 void old_keyfile_warning(void)
 {
@@ -257,8 +262,15 @@ void old_keyfile_warning(void)
     fputs(message, stderr);
 }
 
-void logevent(char *string)
+void console_provide_logctx(void *logctx)
 {
+    console_logctx = logctx;
+}
+
+void logevent(void *frontend, const char *string)
+{
+    if (console_logctx)
+	log_eventlog(console_logctx, string);
 }
 
 int console_get_line(const char *prompt, char *str,
@@ -302,4 +314,12 @@ int console_get_line(const char *prompt, char *str,
 
     }
     return 1;
+}
+
+void frontend_keypress(void *handle)
+{
+    /*
+     * This is nothing but a stub, in console code.
+     */
+    return;
 }

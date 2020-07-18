@@ -1,4 +1,4 @@
-\versionid $Id: feedback.but,v 1.8 2002/08/12 14:08:55 simon Exp $
+\versionid $Id: feedback.but,v 1.15 2003/09/23 10:12:02 jacob Exp $
 
 \A{feedback} Feedback and bug reporting
 
@@ -34,6 +34,10 @@ you can trust the people on the list to respect that confidence.
 Also, the archives aren't publicly available, so you shouldn't be
 letting yourself in for any spam by sending us mail.
 
+Please use a meaningful subject line on your message.  We get a lot of
+mail, and it's hard to find the message we're looking for if they all
+have subject lines like \q{PuTTY bug}.
+
 \S{feedback-largefiles} Sending large attachments
 
 Since the PuTTY contact address is a mailing list, e-mails larger
@@ -62,7 +66,9 @@ problem. Please don't do this without checking with us first - we
 almost never actually need the information in the screen shot.
 Sending a screen shot of an error box is almost certainly
 unnecessary when you could just tell us in plain text what the error
-was. Sending a full-screen shot is \e{occasionally} useful, but it's
+was. (On some versions of Windows, pressing Ctrl-C when the error
+box is displayed will copy the text of the message to the clipboard.)
+Sending a full-screen shot is \e{occasionally} useful, but it's
 probably still wise to check whether we need it before sending it.
 
 If you \e{must} mail a screen shot, don't send it as a \cw{.BMP}
@@ -88,7 +94,7 @@ If you think you have found a bug in PuTTY, your first steps should
 be:
 
 \b Check the
-\W{http://www.chiark.greenend.org.uk/~sgtatham/putty/wishlist.html}{Wishlist
+\W{http://www.chiark.greenend.org.uk/~sgtatham/putty/wishlist/}{Wishlist
 page} on the PuTTY website, and see if we already know about the
 problem. If we do, it is almost certainly not necessary to mail us
 about it, unless you think you have extra information that might be
@@ -127,6 +133,8 @@ delayed and it may not be obvious which version was the latest at
 the time you sent the message. 
 
 \b Tell us what version of what OS you are running PuTTY on.
+(If you're running on Windows for Alpha, tell us, or we'll assume
+you're running on Intel as this is overwhelmingly the case.)
 
 \b Tell us what protocol you are connecting with: SSH, Telnet,
 Rlogin or Raw mode.
@@ -183,13 +191,13 @@ If you want to request a new feature in PuTTY, the very first things
 you should do are:
 
 \b Check the
-\W{http://www.chiark.greenend.org.uk/~sgtatham/putty/wishlist.html}{Wishlist
+\W{http://www.chiark.greenend.org.uk/~sgtatham/putty/wishlist/}{Wishlist
 page} on the PuTTY website, and see if your feature is already on
 the list. If it is, it probably won't achieve very much to repeat
 the request. (But see \k{feedback-feature-priority} if you want to
 persuade us to give your particular feature higher priority.)
 
-\b Check the
+\b Check the Wishlist and
 \W{http://www.chiark.greenend.org.uk/~sgtatham/putty/changes.html}{Change
 Log} on the PuTTY website, and see if we have already added your
 feature in the development snapshots. If it isn't clear, download
@@ -235,7 +243,8 @@ on the Wishlist, or we might think you haven't even \e{read} the
 Wishlist). This probably won't have very \e{much} effect; if a huge
 number of people vote for something then it may make a difference,
 but one or two extra votes for a particular feature are unlikely to
-change our priority list immediately. Also, don't expect a reply.
+change our priority list immediately. Offering a new and compelling
+justification might help. Also, don't expect a reply.
 
 \b Offer us money if we do the work sooner rather than later. This
 sometimes works, but not always. The PuTTY team all have full-time
@@ -273,6 +282,11 @@ if someone can solve your problem. Or try doing the same thing with
 a different SSH client and see if it works with that. Please do not
 report it as a PuTTY bug unless you are really sure it \e{is} a bug
 in PuTTY.
+
+\b If someone else installed PuTTY for you, or you're using PuTTY on
+someone else's computer, try asking them for help first.  They're more
+likely to understand how they installed it and what they expected you
+to use it for than we are.
 
 \b If you have successfully made a connection to your server and now
 need to know what to type at the server's command prompt, or other
