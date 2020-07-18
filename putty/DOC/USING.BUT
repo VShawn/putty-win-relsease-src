@@ -1,4 +1,4 @@
-\versionid $Id: using.but,v 1.25.2.1 2004/08/03 12:08:23 jacob Exp $
+\versionid $Id: using.but,v 1.33.2.3 2004/10/24 16:50:16 jacob Exp $
 
 \C{using} Using PuTTY
 
@@ -123,12 +123,78 @@ Event Log into your bug report.
 Depending on the protocol used for the current session, there may be
 a submenu of \q{special commands}. These are protocol-specific
 tokens, such as a \i{\q{break} signal}, that can be sent down a
-connection in addition to normal data. Currently only Telnet and SSH
-have special commands.
+connection in addition to normal data. Their precise effect is usually
+up to the server. Currently only Telnet and SSH have special commands.
 
-\# FIXME: possibly the full list of special commands should be
-\# given here, if only so that it can be sensibly indexed and
-\# someone looking up (e.g.) AYT can find out how to send one?
+The following special commands are available in Telnet:
+
+\b \I{Are You There, Telnet special command}Are You There
+
+\b \I{Break, Telnet special command}Break
+
+\b \I{Synch, Telnet special command}Synch
+
+\b \I{Erase Character, Telnet special command}Erase Character
+
+\lcont{
+PuTTY can also be configured to send this when the Backspace key is
+pressed; see \k{config-telnetkey}.
+}
+
+\b \I{Erase Line, Telnet special command}Erase Line
+
+\b \I{Go Ahead, Telnet special command}Go Ahead
+
+\b \I{No Operation, Telnet special command}No Operation
+
+\lcont{
+Should have no effect.
+}
+
+\b \I{Abort Process, Telnet special command}Abort Process
+
+\b \I{Abort Output, Telnet special command}Abort Output
+
+\b \I{Interrupt Process, Telnet special command}Interrupt Process
+
+\lcont{
+PuTTY can also be configured to send this when Ctrl-C is typed; see
+\k{config-telnetkey}.
+}
+
+\b \I{Suspend Process, Telnet special command}Suspend Process
+
+\lcont{
+PuTTY can also be configured to send this when Ctrl-Z is typed; see
+\k{config-telnetkey}.
+}
+
+\b \I{End Of Record, Telnet special command}End Of Record
+
+\b \I{End Of File, Telnet special command}End Of File
+
+In an SSH connection, the following special commands are available:
+
+\b \I{IGNORE message, SSH special command}\I{No-op, in SSH}IGNORE message
+
+\lcont{
+Should have no effect.
+}
+
+\b \I{Break, SSH special command}Break
+
+\lcont{
+Only available in SSH-2, and only during a session. Optional
+extension; may not be supported by server. PuTTY requests the server's
+default break length.
+}
+
+\b \I{Signal, SSH special command}Signals (SIGINT, SIGTERM etc)
+
+\lcont{
+Only available in SSH-2, and only during a session. Sends various
+POSIX signals. Not honoured by all servers.
+}
 
 \S2{using-newsession} Starting new sessions
 
@@ -138,10 +204,13 @@ sessions:
 \b Selecting \i{\q{New Session}} will start a completely new
 instance of PuTTY, and bring up the configuration box as normal.
 
-\b Selecting \i{\q{Duplicate Session}} will start a session with
-precisely the same options as your current one - connecting to the
-same host using the same protocol, with all the same terminal
-settings and everything.
+\b Selecting \i{\q{Duplicate Session}} will start a session in a
+new window with precisely the same options as your current one -
+connecting to the same host using the same protocol, with all the
+same terminal settings and everything.
+
+\b In an inactive window, selecting \i{\q{Restart Session}} will
+do the same as \q{Duplicate Session}, but in the current window.
 
 \b The \i{\q{Saved Sessions} submenu} gives you quick access to any
 sets of stored session details you have previously saved. See
@@ -220,15 +289,17 @@ See \k{config-logging} for more details and options.
 \H{using-translation} Altering your \i{character set} configuration
 
 If you find that special characters (\i{accented characters}, for
-example) are not being displayed correctly in your PuTTY session, it
-may be that PuTTY is interpreting the characters sent by the server
-according to the wrong \e{character set}. There are a lot of
-different character sets available, so it's entirely possible for
-this to happen.
+example, or \i{line-drawing characters}) are not being displayed
+correctly in your PuTTY session, it may be that PuTTY is interpreting
+the characters sent by the server according to the wrong \e{character
+set}. There are a lot of different character sets available, so it's
+entirely possible for this to happen.
 
 If you click \q{Change Settings} and look at the \i{\q{Translation}
-panel}, you should see a large number of character sets which you
-can select. Now all you need is to find out which of them you want!
+panel}, you should see a large number of character sets which you can
+select, and other related options. Now all you need is to find out
+which of them you want! (See \k{config-translation} for more
+information.)
 
 \H{using-x-forwarding} Using \i{X11 forwarding} in SSH
 
@@ -246,9 +317,10 @@ does do.
 
 You should then tick the \q{Enable X11 forwarding} box in the
 Tunnels panel (see \k{config-ssh-x11}) before starting your SSH
-session. The \q{X display location} box reads \c{localhost:0} by
-default, which is the usual display location where your X server
-will be installed. If that needs changing, then change it.
+session. The \q{X display location} box is blank by default, which
+means that PuTTY will try to use a sensible default such as \c{:0},
+which is the usual display location where your X server will be
+installed. If that needs changing, then change it.
 
 Now you should be able to log in to the SSH server as normal. To
 check that X forwarding has been successfully negotiated during
@@ -272,6 +344,8 @@ Note that if your PC X server requires authentication to connect,
 then PuTTY cannot currently support it. If this is a problem for
 you, you should mail the PuTTY authors \#{FIXME} and give details
 (see \k{feedback}).
+
+For more options relating to X11 forwarding, see \k{config-ssh-x11}.
 
 \H{using-port-forwarding} Using \i{port forwarding} in SSH
 
@@ -350,7 +424,8 @@ your client PC can connect to the forwarded port.
 remote-to-local port forwardings (so that machines other than the
 SSH server machine can connect to the forwarded port.) Note that
 this feature is only available in the SSH 2 protocol, and not all
-SSH 2 servers support it (OpenSSH 3.0 does not, for example).
+SSH 2 servers honour it (in OpenSSH, for example, it's usually
+disabled by default).
 
 You can also specify an \i{IP address} to listen on. Typically a
 Windows machine can be asked to listen on any single IP address in
@@ -363,6 +438,10 @@ doesn't allow you to change the port number it uses. This feature is
 available for local-to-remote forwarded ports; SSH1 is unable to
 support it for remote-to-local ports, while SSH2 can support it in
 theory but servers will not necessarily cooperate.
+
+(Note that if you're using Windows XP Service Pack 2, you may need
+to obtain a fix from Microsoft in order to use addresses like
+\cw{127.0.0.5} - see \k{faq-alternate-localhost}.)
 
 \H{using-rawprot} Making \i{raw TCP connections}
 
@@ -626,6 +705,24 @@ pseudo-terminal} checkbox in the SSH panel of the PuTTY
 configuration box (see \k{config-ssh-pty}).
 
 These options are not available in the file transfer tools PSCP and
+PSFTP.
+
+\S2{using-cmdline-noshell} \I{-N-upper}\c{-N}: suppress starting a
+shell or command
+
+The \c{-N} option prevents PuTTY from attempting to start a shell or
+command on the remote server. You might want to use this option if
+you are only using the SSH connection for port forwarding, and your
+user account on the server does not have the ability to run a shell.
+
+This feature is only available in SSH protocol version 2 (since the
+version 1 protocol assumes you will always want to run a shell).
+
+This option is equivalent to the \q{Don't start a shell or command
+at all} checkbox in the SSH panel of the PuTTY configuration box
+(see \k{config-ssh-noshell}).
+
+This option is not available in the file transfer tools PSCP and
 PSFTP.
 
 \S2{using-cmdline-compress} \I{-C-upper}\c{-C}: enable \i{compression}

@@ -98,37 +98,40 @@ pageant.exe: misc.obj pageant.obj pageant.res pageantc.obj sshaes.obj \
 		winmisc.obj winutils.obj pageant.rsp
 	link $(LFLAGS) -out:pageant.exe -map:pageant.map @pageant.rsp
 
-plink.exe: be_all.obj cmdline.obj console.obj ldisc.obj logging.obj misc.obj \
-		noise.obj pageantc.obj plink.obj plink.res portfwd.obj \
-		pproxy.obj proxy.obj raw.obj rlogin.obj settings.obj ssh.obj \
-		sshaes.obj sshblowf.obj sshbn.obj sshcrc.obj sshcrcda.obj \
-		sshdes.obj sshdh.obj sshdss.obj sshmd5.obj sshpubk.obj \
-		sshrand.obj sshrsa.obj sshsh512.obj sshsha.obj sshzlib.obj \
-		telnet.obj tree234.obj version.obj wildcard.obj windefs.obj \
-		winmisc.obj winnet.obj winstore.obj x11fwd.obj plink.rsp
+plink.exe: be_all.obj cmdline.obj console.obj cproxy.obj ldisc.obj \
+		logging.obj misc.obj noise.obj pageantc.obj plink.obj \
+		plink.res portfwd.obj pproxy.obj proxy.obj raw.obj \
+		rlogin.obj settings.obj ssh.obj sshaes.obj sshblowf.obj \
+		sshbn.obj sshcrc.obj sshcrcda.obj sshdes.obj sshdh.obj \
+		sshdss.obj sshmd5.obj sshpubk.obj sshrand.obj sshrsa.obj \
+		sshsh512.obj sshsha.obj sshzlib.obj telnet.obj tree234.obj \
+		version.obj wildcard.obj windefs.obj winmisc.obj winnet.obj \
+		winstore.obj x11fwd.obj plink.rsp
 	link $(LFLAGS) -out:plink.exe -map:plink.map @plink.rsp
 
-pscp.exe: be_none.obj cmdline.obj console.obj int64.obj logging.obj misc.obj \
-		noise.obj pageantc.obj portfwd.obj pproxy.obj proxy.obj \
-		scp.obj scp.res settings.obj sftp.obj ssh.obj sshaes.obj \
-		sshblowf.obj sshbn.obj sshcrc.obj sshcrcda.obj sshdes.obj \
-		sshdh.obj sshdss.obj sshmd5.obj sshpubk.obj sshrand.obj \
-		sshrsa.obj sshsh512.obj sshsha.obj sshzlib.obj tree234.obj \
-		version.obj wildcard.obj windefs.obj winmisc.obj winnet.obj \
-		winsftp.obj winstore.obj x11fwd.obj pscp.rsp
+pscp.exe: be_none.obj cmdline.obj console.obj cproxy.obj int64.obj \
+		logging.obj misc.obj noise.obj pageantc.obj portfwd.obj \
+		pproxy.obj proxy.obj scp.obj scp.res settings.obj sftp.obj \
+		ssh.obj sshaes.obj sshblowf.obj sshbn.obj sshcrc.obj \
+		sshcrcda.obj sshdes.obj sshdh.obj sshdss.obj sshmd5.obj \
+		sshpubk.obj sshrand.obj sshrsa.obj sshsh512.obj sshsha.obj \
+		sshzlib.obj tree234.obj version.obj wildcard.obj windefs.obj \
+		winmisc.obj winnet.obj winsftp.obj winstore.obj x11fwd.obj \
+		pscp.rsp
 	link $(LFLAGS) -out:pscp.exe -map:pscp.map @pscp.rsp
 
-psftp.exe: be_none.obj cmdline.obj console.obj int64.obj logging.obj \
-		misc.obj noise.obj pageantc.obj portfwd.obj pproxy.obj \
-		proxy.obj psftp.obj scp.res settings.obj sftp.obj ssh.obj \
-		sshaes.obj sshblowf.obj sshbn.obj sshcrc.obj sshcrcda.obj \
-		sshdes.obj sshdh.obj sshdss.obj sshmd5.obj sshpubk.obj \
-		sshrand.obj sshrsa.obj sshsh512.obj sshsha.obj sshzlib.obj \
-		tree234.obj version.obj wildcard.obj windefs.obj winmisc.obj \
-		winnet.obj winsftp.obj winstore.obj x11fwd.obj psftp.rsp
+psftp.exe: be_none.obj cmdline.obj console.obj cproxy.obj int64.obj \
+		logging.obj misc.obj noise.obj pageantc.obj portfwd.obj \
+		pproxy.obj proxy.obj psftp.obj scp.res settings.obj sftp.obj \
+		ssh.obj sshaes.obj sshblowf.obj sshbn.obj sshcrc.obj \
+		sshcrcda.obj sshdes.obj sshdh.obj sshdss.obj sshmd5.obj \
+		sshpubk.obj sshrand.obj sshrsa.obj sshsh512.obj sshsha.obj \
+		sshzlib.obj tree234.obj version.obj wildcard.obj windefs.obj \
+		winmisc.obj winnet.obj winsftp.obj winstore.obj x11fwd.obj \
+		psftp.rsp
 	link $(LFLAGS) -out:psftp.exe -map:psftp.map @psftp.rsp
 
-putty.exe: be_all.obj cmdline.obj config.obj dialog.obj ldisc.obj \
+putty.exe: be_all.obj cmdline.obj config.obj cproxy.obj dialog.obj ldisc.obj \
 		ldiscucs.obj logging.obj misc.obj noise.obj pageantc.obj \
 		portfwd.obj pproxy.obj printing.obj proxy.obj raw.obj \
 		rlogin.obj settings.obj sizetip.obj ssh.obj sshaes.obj \
@@ -150,12 +153,12 @@ puttygen.exe: import.obj misc.obj noise.obj puttygen.obj puttygen.res \
 	link $(LFLAGS) -out:puttygen.exe -map:puttygen.map @puttygen.rsp
 
 puttytel.exe: be_nossh.obj cmdline.obj config.obj dialog.obj ldisc.obj \
-		ldiscucs.obj logging.obj misc.obj pproxy.obj printing.obj \
-		proxy.obj raw.obj rlogin.obj settings.obj sizetip.obj \
-		telnet.obj terminal.obj tree234.obj unicode.obj version.obj \
-		wcwidth.obj win_res.res wincfg.obj winctrls.obj windefs.obj \
-		windlg.obj window.obj winmisc.obj winnet.obj winstore.obj \
-		winutils.obj puttytel.rsp
+		ldiscucs.obj logging.obj misc.obj nocproxy.obj pproxy.obj \
+		printing.obj proxy.obj raw.obj rlogin.obj settings.obj \
+		sizetip.obj telnet.obj terminal.obj tree234.obj unicode.obj \
+		version.obj wcwidth.obj win_res.res wincfg.obj winctrls.obj \
+		windefs.obj windlg.obj window.obj winmisc.obj winnet.obj \
+		winstore.obj winutils.obj puttytel.rsp
 	link $(LFLAGS) -out:puttytel.exe -map:puttytel.map @puttytel.rsp
 
 pageant.rsp: $(MAKEFILE)
@@ -171,41 +174,42 @@ pageant.rsp: $(MAKEFILE)
 plink.rsp: $(MAKEFILE)
 	echo /nologo /subsystem:console > plink.rsp
 	echo advapi32.lib be_all.obj cmdline.obj comctl32.lib >> plink.rsp
-	echo comdlg32.lib console.obj gdi32.lib imm32.lib >> plink.rsp
-	echo ldisc.obj logging.obj misc.obj noise.obj >> plink.rsp
-	echo pageantc.obj plink.obj plink.res portfwd.obj >> plink.rsp
-	echo pproxy.obj proxy.obj raw.obj rlogin.obj >> plink.rsp
-	echo settings.obj shell32.lib ssh.obj sshaes.obj >> plink.rsp
-	echo sshblowf.obj sshbn.obj sshcrc.obj sshcrcda.obj >> plink.rsp
-	echo sshdes.obj sshdh.obj sshdss.obj sshmd5.obj >> plink.rsp
-	echo sshpubk.obj sshrand.obj sshrsa.obj sshsh512.obj >> plink.rsp
-	echo sshsha.obj sshzlib.obj telnet.obj tree234.obj >> plink.rsp
-	echo user32.lib version.obj wildcard.obj windefs.obj >> plink.rsp
-	echo winmisc.obj winmm.lib winnet.obj winspool.lib >> plink.rsp
-	echo winstore.obj x11fwd.obj >> plink.rsp
+	echo comdlg32.lib console.obj cproxy.obj gdi32.lib >> plink.rsp
+	echo imm32.lib ldisc.obj logging.obj misc.obj >> plink.rsp
+	echo noise.obj pageantc.obj plink.obj plink.res >> plink.rsp
+	echo portfwd.obj pproxy.obj proxy.obj raw.obj >> plink.rsp
+	echo rlogin.obj settings.obj shell32.lib ssh.obj >> plink.rsp
+	echo sshaes.obj sshblowf.obj sshbn.obj sshcrc.obj >> plink.rsp
+	echo sshcrcda.obj sshdes.obj sshdh.obj sshdss.obj >> plink.rsp
+	echo sshmd5.obj sshpubk.obj sshrand.obj sshrsa.obj >> plink.rsp
+	echo sshsh512.obj sshsha.obj sshzlib.obj telnet.obj >> plink.rsp
+	echo tree234.obj user32.lib version.obj wildcard.obj >> plink.rsp
+	echo windefs.obj winmisc.obj winmm.lib winnet.obj >> plink.rsp
+	echo winspool.lib winstore.obj x11fwd.obj >> plink.rsp
 
 pscp.rsp: $(MAKEFILE)
 	echo /nologo /subsystem:console > pscp.rsp
 	echo advapi32.lib be_none.obj cmdline.obj comctl32.lib >> pscp.rsp
-	echo comdlg32.lib console.obj gdi32.lib imm32.lib >> pscp.rsp
-	echo int64.obj logging.obj misc.obj noise.obj >> pscp.rsp
-	echo pageantc.obj portfwd.obj pproxy.obj proxy.obj >> pscp.rsp
-	echo scp.obj scp.res settings.obj sftp.obj shell32.lib >> pscp.rsp
-	echo ssh.obj sshaes.obj sshblowf.obj sshbn.obj >> pscp.rsp
-	echo sshcrc.obj sshcrcda.obj sshdes.obj sshdh.obj >> pscp.rsp
-	echo sshdss.obj sshmd5.obj sshpubk.obj sshrand.obj >> pscp.rsp
-	echo sshrsa.obj sshsh512.obj sshsha.obj sshzlib.obj >> pscp.rsp
-	echo tree234.obj user32.lib version.obj wildcard.obj >> pscp.rsp
-	echo windefs.obj winmisc.obj winmm.lib winnet.obj >> pscp.rsp
-	echo winsftp.obj winspool.lib winstore.obj x11fwd.obj >> pscp.rsp
+	echo comdlg32.lib console.obj cproxy.obj gdi32.lib >> pscp.rsp
+	echo imm32.lib int64.obj logging.obj misc.obj >> pscp.rsp
+	echo noise.obj pageantc.obj portfwd.obj pproxy.obj >> pscp.rsp
+	echo proxy.obj scp.obj scp.res settings.obj sftp.obj >> pscp.rsp
+	echo shell32.lib ssh.obj sshaes.obj sshblowf.obj >> pscp.rsp
+	echo sshbn.obj sshcrc.obj sshcrcda.obj sshdes.obj >> pscp.rsp
+	echo sshdh.obj sshdss.obj sshmd5.obj sshpubk.obj >> pscp.rsp
+	echo sshrand.obj sshrsa.obj sshsh512.obj sshsha.obj >> pscp.rsp
+	echo sshzlib.obj tree234.obj user32.lib version.obj >> pscp.rsp
+	echo wildcard.obj windefs.obj winmisc.obj winmm.lib >> pscp.rsp
+	echo winnet.obj winsftp.obj winspool.lib winstore.obj >> pscp.rsp
+	echo x11fwd.obj >> pscp.rsp
 
 psftp.rsp: $(MAKEFILE)
 	echo /nologo /subsystem:console > psftp.rsp
 	echo advapi32.lib be_none.obj cmdline.obj comctl32.lib >> psftp.rsp
-	echo comdlg32.lib console.obj gdi32.lib imm32.lib >> psftp.rsp
-	echo int64.obj logging.obj misc.obj noise.obj >> psftp.rsp
-	echo pageantc.obj portfwd.obj pproxy.obj proxy.obj >> psftp.rsp
-	echo psftp.obj scp.res settings.obj sftp.obj >> psftp.rsp
+	echo comdlg32.lib console.obj cproxy.obj gdi32.lib >> psftp.rsp
+	echo imm32.lib int64.obj logging.obj misc.obj >> psftp.rsp
+	echo noise.obj pageantc.obj portfwd.obj pproxy.obj >> psftp.rsp
+	echo proxy.obj psftp.obj scp.res settings.obj sftp.obj >> psftp.rsp
 	echo shell32.lib ssh.obj sshaes.obj sshblowf.obj >> psftp.rsp
 	echo sshbn.obj sshcrc.obj sshcrcda.obj sshdes.obj >> psftp.rsp
 	echo sshdh.obj sshdss.obj sshmd5.obj sshpubk.obj >> psftp.rsp
@@ -218,21 +222,21 @@ psftp.rsp: $(MAKEFILE)
 putty.rsp: $(MAKEFILE)
 	echo /nologo /subsystem:windows > putty.rsp
 	echo advapi32.lib be_all.obj cmdline.obj comctl32.lib >> putty.rsp
-	echo comdlg32.lib config.obj dialog.obj gdi32.lib >> putty.rsp
-	echo imm32.lib ldisc.obj ldiscucs.obj logging.obj >> putty.rsp
-	echo misc.obj noise.obj pageantc.obj portfwd.obj >> putty.rsp
-	echo pproxy.obj printing.obj proxy.obj raw.obj >> putty.rsp
-	echo rlogin.obj settings.obj shell32.lib sizetip.obj >> putty.rsp
-	echo ssh.obj sshaes.obj sshblowf.obj sshbn.obj >> putty.rsp
-	echo sshcrc.obj sshcrcda.obj sshdes.obj sshdh.obj >> putty.rsp
-	echo sshdss.obj sshmd5.obj sshpubk.obj sshrand.obj >> putty.rsp
-	echo sshrsa.obj sshsh512.obj sshsha.obj sshzlib.obj >> putty.rsp
-	echo telnet.obj terminal.obj tree234.obj unicode.obj >> putty.rsp
-	echo user32.lib version.obj wcwidth.obj wildcard.obj >> putty.rsp
-	echo win_res.res wincfg.obj winctrls.obj windefs.obj >> putty.rsp
-	echo windlg.obj window.obj winmisc.obj winmm.lib >> putty.rsp
-	echo winnet.obj winspool.lib winstore.obj winutils.obj >> putty.rsp
-	echo x11fwd.obj >> putty.rsp
+	echo comdlg32.lib config.obj cproxy.obj dialog.obj >> putty.rsp
+	echo gdi32.lib imm32.lib ldisc.obj ldiscucs.obj >> putty.rsp
+	echo logging.obj misc.obj noise.obj pageantc.obj >> putty.rsp
+	echo portfwd.obj pproxy.obj printing.obj proxy.obj >> putty.rsp
+	echo raw.obj rlogin.obj settings.obj shell32.lib >> putty.rsp
+	echo sizetip.obj ssh.obj sshaes.obj sshblowf.obj >> putty.rsp
+	echo sshbn.obj sshcrc.obj sshcrcda.obj sshdes.obj >> putty.rsp
+	echo sshdh.obj sshdss.obj sshmd5.obj sshpubk.obj >> putty.rsp
+	echo sshrand.obj sshrsa.obj sshsh512.obj sshsha.obj >> putty.rsp
+	echo sshzlib.obj telnet.obj terminal.obj tree234.obj >> putty.rsp
+	echo unicode.obj user32.lib version.obj wcwidth.obj >> putty.rsp
+	echo wildcard.obj win_res.res wincfg.obj winctrls.obj >> putty.rsp
+	echo windefs.obj windlg.obj window.obj winmisc.obj >> putty.rsp
+	echo winmm.lib winnet.obj winspool.lib winstore.obj >> putty.rsp
+	echo winutils.obj x11fwd.obj >> putty.rsp
 
 puttygen.rsp: $(MAKEFILE)
 	echo /nologo /subsystem:windows > puttygen.rsp
@@ -251,14 +255,14 @@ puttytel.rsp: $(MAKEFILE)
 	echo advapi32.lib be_nossh.obj cmdline.obj >> puttytel.rsp
 	echo comctl32.lib comdlg32.lib config.obj dialog.obj >> puttytel.rsp
 	echo gdi32.lib imm32.lib ldisc.obj ldiscucs.obj >> puttytel.rsp
-	echo logging.obj misc.obj pproxy.obj printing.obj >> puttytel.rsp
-	echo proxy.obj raw.obj rlogin.obj settings.obj >> puttytel.rsp
-	echo shell32.lib sizetip.obj telnet.obj terminal.obj >> puttytel.rsp
-	echo tree234.obj unicode.obj user32.lib version.obj >> puttytel.rsp
-	echo wcwidth.obj win_res.res wincfg.obj winctrls.obj >> puttytel.rsp
-	echo windefs.obj windlg.obj window.obj winmisc.obj >> puttytel.rsp
-	echo winmm.lib winnet.obj winspool.lib winstore.obj >> puttytel.rsp
-	echo winutils.obj >> puttytel.rsp
+	echo logging.obj misc.obj nocproxy.obj pproxy.obj >> puttytel.rsp
+	echo printing.obj proxy.obj raw.obj rlogin.obj >> puttytel.rsp
+	echo settings.obj shell32.lib sizetip.obj telnet.obj >> puttytel.rsp
+	echo terminal.obj tree234.obj unicode.obj user32.lib >> puttytel.rsp
+	echo version.obj wcwidth.obj win_res.res wincfg.obj >> puttytel.rsp
+	echo winctrls.obj windefs.obj windlg.obj window.obj >> puttytel.rsp
+	echo winmisc.obj winmm.lib winnet.obj winspool.lib >> puttytel.rsp
+	echo winstore.obj winutils.obj >> puttytel.rsp
 
 be_all.obj: .\be_all.c .\putty.h .\puttyps.h .\network.h .\misc.h \
 		.\winstuff.h mac\macstuff.h unix\unix.h .\puttymem.h \
@@ -282,6 +286,9 @@ console.obj: .\console.c .\putty.h .\storage.h .\ssh.h .\puttyps.h \
 		.\network.h .\misc.h .\puttymem.h .\int64.h .\winstuff.h \
 		mac\macstuff.h unix\unix.h .\tree234.h .\winhelp.h \
 		charset\charset.h
+cproxy.obj: .\cproxy.c .\putty.h .\ssh.h .\network.h .\proxy.h .\puttyps.h \
+		.\misc.h .\puttymem.h .\int64.h .\winstuff.h mac\macstuff.h \
+		unix\unix.h .\tree234.h .\winhelp.h charset\charset.h
 dialog.obj: .\dialog.c .\putty.h .\dialog.h .\puttyps.h .\network.h .\misc.h \
 		.\winstuff.h mac\macstuff.h unix\unix.h .\puttymem.h \
 		.\tree234.h .\winhelp.h charset\charset.h
@@ -366,6 +373,9 @@ misc.obj: .\misc.c .\putty.h .\puttyps.h .\network.h .\misc.h .\winstuff.h \
 mtcpnet.obj: mac\mtcpnet.c .\putty.h .\network.h mac\mac.h .\puttyps.h \
 		.\misc.h charset\charset.h .\tree234.h .\winstuff.h \
 		mac\macstuff.h unix\unix.h .\puttymem.h .\winhelp.h
+nocproxy.obj: .\nocproxy.c .\putty.h .\network.h .\proxy.h .\puttyps.h \
+		.\misc.h .\winstuff.h mac\macstuff.h unix\unix.h \
+		.\puttymem.h .\tree234.h .\winhelp.h charset\charset.h
 noise.obj: .\noise.c .\putty.h .\ssh.h .\storage.h .\puttyps.h .\network.h \
 		.\misc.h .\puttymem.h .\int64.h .\winstuff.h mac\macstuff.h \
 		unix\unix.h .\tree234.h .\winhelp.h charset\charset.h

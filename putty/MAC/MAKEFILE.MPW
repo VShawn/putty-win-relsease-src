@@ -155,168 +155,168 @@ all Ä PuTTY PuTTYgen PuTTYtel
 
 PuTTY Ä PuTTY.68k PuTTY.ppc PuTTY.carbon
 
-PuTTY.68k Ä be_all.68k.o config.68k.o dialog.68k.o fromucs.68k.o ldisc.68k.o ¶
-		ldiscucs.68k.o localenc.68k.o logging.68k.o mac.68k.o ¶
-		macabout.68k.o macctrls.68k.o macdlg.68k.o macenc.68k.o ¶
-		macevlog.68k.o macmisc.68k.o macnet.68k.o macnoise.68k.o ¶
-		macstore.68k.o macterm.68k.o macucs.68k.o mimeenc.68k.o ¶
-		misc.68k.o mtcpnet.68k.o otnet.68k.o portfwd.68k.o ¶
-		pproxy.68k.o proxy.68k.o raw.68k.o rlogin.68k.o sbcs.68k.o ¶
-		sbcsdat.68k.o settings.68k.o slookup.68k.o ssh.68k.o ¶
-		sshaes.68k.o sshblowf.68k.o sshbn.68k.o sshcrc.68k.o ¶
-		sshcrcda.68k.o sshdes.68k.o sshdh.68k.o sshdss.68k.o ¶
-		sshmd5.68k.o sshpubk.68k.o sshrand.68k.o sshrsa.68k.o ¶
-		sshsh512.68k.o sshsha.68k.o sshzlib.68k.o stricmp.68k.o ¶
-		telnet.68k.o terminal.68k.o testback.68k.o toucs.68k.o ¶
-		tree234.68k.o utf8.68k.o version.68k.o vsnprint.68k.o ¶
-		wcwidth.68k.o wildcard.68k.o x11fwd.68k.o xenc.68k.o ¶
-		mac_res.rsrc
+PuTTY.68k Ä be_all.68k.o config.68k.o cproxy.68k.o dialog.68k.o ¶
+		fromucs.68k.o ldisc.68k.o ldiscucs.68k.o localenc.68k.o ¶
+		logging.68k.o mac.68k.o macabout.68k.o macctrls.68k.o ¶
+		macdlg.68k.o macenc.68k.o macevlog.68k.o macmisc.68k.o ¶
+		macnet.68k.o macnoise.68k.o macstore.68k.o macterm.68k.o ¶
+		macucs.68k.o mimeenc.68k.o misc.68k.o mtcpnet.68k.o ¶
+		otnet.68k.o portfwd.68k.o pproxy.68k.o proxy.68k.o raw.68k.o ¶
+		rlogin.68k.o sbcs.68k.o sbcsdat.68k.o settings.68k.o ¶
+		slookup.68k.o ssh.68k.o sshaes.68k.o sshblowf.68k.o ¶
+		sshbn.68k.o sshcrc.68k.o sshcrcda.68k.o sshdes.68k.o ¶
+		sshdh.68k.o sshdss.68k.o sshmd5.68k.o sshpubk.68k.o ¶
+		sshrand.68k.o sshrsa.68k.o sshsh512.68k.o sshsha.68k.o ¶
+		sshzlib.68k.o stricmp.68k.o telnet.68k.o terminal.68k.o ¶
+		testback.68k.o toucs.68k.o tree234.68k.o utf8.68k.o ¶
+		version.68k.o vsnprint.68k.o wcwidth.68k.o wildcard.68k.o ¶
+		x11fwd.68k.o xenc.68k.o mac_res.rsrc
 	Duplicate -y mac_res.rsrc {Targ}
 	{Link_68K} -o {Targ} -fragname PuTTY {LinkOptions_68K} be_all.68k.o ¶
-		config.68k.o dialog.68k.o fromucs.68k.o ldisc.68k.o ¶
-		ldiscucs.68k.o localenc.68k.o logging.68k.o mac.68k.o ¶
-		macabout.68k.o macctrls.68k.o macdlg.68k.o macenc.68k.o ¶
-		macevlog.68k.o macmisc.68k.o macnet.68k.o macnoise.68k.o ¶
-		macstore.68k.o macterm.68k.o macucs.68k.o mimeenc.68k.o ¶
-		misc.68k.o mtcpnet.68k.o otnet.68k.o portfwd.68k.o ¶
-		pproxy.68k.o proxy.68k.o raw.68k.o rlogin.68k.o sbcs.68k.o ¶
-		sbcsdat.68k.o settings.68k.o slookup.68k.o ssh.68k.o ¶
-		sshaes.68k.o sshblowf.68k.o sshbn.68k.o sshcrc.68k.o ¶
-		sshcrcda.68k.o sshdes.68k.o sshdh.68k.o sshdss.68k.o ¶
-		sshmd5.68k.o sshpubk.68k.o sshrand.68k.o sshrsa.68k.o ¶
-		sshsh512.68k.o sshsha.68k.o sshzlib.68k.o stricmp.68k.o ¶
-		telnet.68k.o terminal.68k.o testback.68k.o toucs.68k.o ¶
-		tree234.68k.o utf8.68k.o version.68k.o vsnprint.68k.o ¶
-		wcwidth.68k.o wildcard.68k.o x11fwd.68k.o xenc.68k.o ¶
-		{Libs_68K}
+		config.68k.o cproxy.68k.o dialog.68k.o fromucs.68k.o ¶
+		ldisc.68k.o ldiscucs.68k.o localenc.68k.o logging.68k.o ¶
+		mac.68k.o macabout.68k.o macctrls.68k.o macdlg.68k.o ¶
+		macenc.68k.o macevlog.68k.o macmisc.68k.o macnet.68k.o ¶
+		macnoise.68k.o macstore.68k.o macterm.68k.o macucs.68k.o ¶
+		mimeenc.68k.o misc.68k.o mtcpnet.68k.o otnet.68k.o ¶
+		portfwd.68k.o pproxy.68k.o proxy.68k.o raw.68k.o ¶
+		rlogin.68k.o sbcs.68k.o sbcsdat.68k.o settings.68k.o ¶
+		slookup.68k.o ssh.68k.o sshaes.68k.o sshblowf.68k.o ¶
+		sshbn.68k.o sshcrc.68k.o sshcrcda.68k.o sshdes.68k.o ¶
+		sshdh.68k.o sshdss.68k.o sshmd5.68k.o sshpubk.68k.o ¶
+		sshrand.68k.o sshrsa.68k.o sshsh512.68k.o sshsha.68k.o ¶
+		sshzlib.68k.o stricmp.68k.o telnet.68k.o terminal.68k.o ¶
+		testback.68k.o toucs.68k.o tree234.68k.o utf8.68k.o ¶
+		version.68k.o vsnprint.68k.o wcwidth.68k.o wildcard.68k.o ¶
+		x11fwd.68k.o xenc.68k.o {Libs_68K}
 	SetFile -a BMi {Targ}
 
-PuTTY.cfm68k Ä be_all.cfm68k.o config.cfm68k.o dialog.cfm68k.o ¶
-		fromucs.cfm68k.o ldisc.cfm68k.o ldiscucs.cfm68k.o ¶
-		localenc.cfm68k.o logging.cfm68k.o mac.cfm68k.o ¶
-		macabout.cfm68k.o macctrls.cfm68k.o macdlg.cfm68k.o ¶
-		macenc.cfm68k.o macevlog.cfm68k.o macmisc.cfm68k.o ¶
-		macnet.cfm68k.o macnoise.cfm68k.o macstore.cfm68k.o ¶
-		macterm.cfm68k.o macucs.cfm68k.o mimeenc.cfm68k.o ¶
-		misc.cfm68k.o mtcpnet.cfm68k.o otnet.cfm68k.o ¶
-		portfwd.cfm68k.o pproxy.cfm68k.o proxy.cfm68k.o raw.cfm68k.o ¶
-		rlogin.cfm68k.o sbcs.cfm68k.o sbcsdat.cfm68k.o ¶
-		settings.cfm68k.o slookup.cfm68k.o ssh.cfm68k.o ¶
-		sshaes.cfm68k.o sshblowf.cfm68k.o sshbn.cfm68k.o ¶
-		sshcrc.cfm68k.o sshcrcda.cfm68k.o sshdes.cfm68k.o ¶
-		sshdh.cfm68k.o sshdss.cfm68k.o sshmd5.cfm68k.o ¶
-		sshpubk.cfm68k.o sshrand.cfm68k.o sshrsa.cfm68k.o ¶
-		sshsh512.cfm68k.o sshsha.cfm68k.o sshzlib.cfm68k.o ¶
-		stricmp.cfm68k.o telnet.cfm68k.o terminal.cfm68k.o ¶
-		testback.cfm68k.o toucs.cfm68k.o tree234.cfm68k.o ¶
-		utf8.cfm68k.o version.cfm68k.o vsnprint.cfm68k.o ¶
-		wcwidth.cfm68k.o wildcard.cfm68k.o x11fwd.cfm68k.o ¶
-		xenc.cfm68k.o mac_res.rsrc
+PuTTY.cfm68k Ä be_all.cfm68k.o config.cfm68k.o cproxy.cfm68k.o ¶
+		dialog.cfm68k.o fromucs.cfm68k.o ldisc.cfm68k.o ¶
+		ldiscucs.cfm68k.o localenc.cfm68k.o logging.cfm68k.o ¶
+		mac.cfm68k.o macabout.cfm68k.o macctrls.cfm68k.o ¶
+		macdlg.cfm68k.o macenc.cfm68k.o macevlog.cfm68k.o ¶
+		macmisc.cfm68k.o macnet.cfm68k.o macnoise.cfm68k.o ¶
+		macstore.cfm68k.o macterm.cfm68k.o macucs.cfm68k.o ¶
+		mimeenc.cfm68k.o misc.cfm68k.o mtcpnet.cfm68k.o ¶
+		otnet.cfm68k.o portfwd.cfm68k.o pproxy.cfm68k.o ¶
+		proxy.cfm68k.o raw.cfm68k.o rlogin.cfm68k.o sbcs.cfm68k.o ¶
+		sbcsdat.cfm68k.o settings.cfm68k.o slookup.cfm68k.o ¶
+		ssh.cfm68k.o sshaes.cfm68k.o sshblowf.cfm68k.o ¶
+		sshbn.cfm68k.o sshcrc.cfm68k.o sshcrcda.cfm68k.o ¶
+		sshdes.cfm68k.o sshdh.cfm68k.o sshdss.cfm68k.o ¶
+		sshmd5.cfm68k.o sshpubk.cfm68k.o sshrand.cfm68k.o ¶
+		sshrsa.cfm68k.o sshsh512.cfm68k.o sshsha.cfm68k.o ¶
+		sshzlib.cfm68k.o stricmp.cfm68k.o telnet.cfm68k.o ¶
+		terminal.cfm68k.o testback.cfm68k.o toucs.cfm68k.o ¶
+		tree234.cfm68k.o utf8.cfm68k.o version.cfm68k.o ¶
+		vsnprint.cfm68k.o wcwidth.cfm68k.o wildcard.cfm68k.o ¶
+		x11fwd.cfm68k.o xenc.cfm68k.o mac_res.rsrc
 	Duplicate -y mac_res.rsrc {Targ}
 	{Link_CFM68K} -o {Targ} -fragname PuTTY {LinkOptions_CFM68K} ¶
-		be_all.cfm68k.o config.cfm68k.o dialog.cfm68k.o ¶
-		fromucs.cfm68k.o ldisc.cfm68k.o ldiscucs.cfm68k.o ¶
-		localenc.cfm68k.o logging.cfm68k.o mac.cfm68k.o ¶
-		macabout.cfm68k.o macctrls.cfm68k.o macdlg.cfm68k.o ¶
-		macenc.cfm68k.o macevlog.cfm68k.o macmisc.cfm68k.o ¶
-		macnet.cfm68k.o macnoise.cfm68k.o macstore.cfm68k.o ¶
-		macterm.cfm68k.o macucs.cfm68k.o mimeenc.cfm68k.o ¶
-		misc.cfm68k.o mtcpnet.cfm68k.o otnet.cfm68k.o ¶
-		portfwd.cfm68k.o pproxy.cfm68k.o proxy.cfm68k.o raw.cfm68k.o ¶
-		rlogin.cfm68k.o sbcs.cfm68k.o sbcsdat.cfm68k.o ¶
-		settings.cfm68k.o slookup.cfm68k.o ssh.cfm68k.o ¶
-		sshaes.cfm68k.o sshblowf.cfm68k.o sshbn.cfm68k.o ¶
-		sshcrc.cfm68k.o sshcrcda.cfm68k.o sshdes.cfm68k.o ¶
-		sshdh.cfm68k.o sshdss.cfm68k.o sshmd5.cfm68k.o ¶
-		sshpubk.cfm68k.o sshrand.cfm68k.o sshrsa.cfm68k.o ¶
-		sshsh512.cfm68k.o sshsha.cfm68k.o sshzlib.cfm68k.o ¶
-		stricmp.cfm68k.o telnet.cfm68k.o terminal.cfm68k.o ¶
-		testback.cfm68k.o toucs.cfm68k.o tree234.cfm68k.o ¶
-		utf8.cfm68k.o version.cfm68k.o vsnprint.cfm68k.o ¶
-		wcwidth.cfm68k.o wildcard.cfm68k.o x11fwd.cfm68k.o ¶
-		xenc.cfm68k.o {Libs_CFM68K}
+		be_all.cfm68k.o config.cfm68k.o cproxy.cfm68k.o ¶
+		dialog.cfm68k.o fromucs.cfm68k.o ldisc.cfm68k.o ¶
+		ldiscucs.cfm68k.o localenc.cfm68k.o logging.cfm68k.o ¶
+		mac.cfm68k.o macabout.cfm68k.o macctrls.cfm68k.o ¶
+		macdlg.cfm68k.o macenc.cfm68k.o macevlog.cfm68k.o ¶
+		macmisc.cfm68k.o macnet.cfm68k.o macnoise.cfm68k.o ¶
+		macstore.cfm68k.o macterm.cfm68k.o macucs.cfm68k.o ¶
+		mimeenc.cfm68k.o misc.cfm68k.o mtcpnet.cfm68k.o ¶
+		otnet.cfm68k.o portfwd.cfm68k.o pproxy.cfm68k.o ¶
+		proxy.cfm68k.o raw.cfm68k.o rlogin.cfm68k.o sbcs.cfm68k.o ¶
+		sbcsdat.cfm68k.o settings.cfm68k.o slookup.cfm68k.o ¶
+		ssh.cfm68k.o sshaes.cfm68k.o sshblowf.cfm68k.o ¶
+		sshbn.cfm68k.o sshcrc.cfm68k.o sshcrcda.cfm68k.o ¶
+		sshdes.cfm68k.o sshdh.cfm68k.o sshdss.cfm68k.o ¶
+		sshmd5.cfm68k.o sshpubk.cfm68k.o sshrand.cfm68k.o ¶
+		sshrsa.cfm68k.o sshsh512.cfm68k.o sshsha.cfm68k.o ¶
+		sshzlib.cfm68k.o stricmp.cfm68k.o telnet.cfm68k.o ¶
+		terminal.cfm68k.o testback.cfm68k.o toucs.cfm68k.o ¶
+		tree234.cfm68k.o utf8.cfm68k.o version.cfm68k.o ¶
+		vsnprint.cfm68k.o wcwidth.cfm68k.o wildcard.cfm68k.o ¶
+		x11fwd.cfm68k.o xenc.cfm68k.o {Libs_CFM68K}
 	SetFile -a BMi {Targ}
 
-PuTTY.ppc Ä be_all.ppc.o config.ppc.o dialog.ppc.o fromucs.ppc.o ldisc.ppc.o ¶
-		ldiscucs.ppc.o localenc.ppc.o logging.ppc.o mac.ppc.o ¶
-		macabout.ppc.o macctrls.ppc.o macdlg.ppc.o macenc.ppc.o ¶
-		macevlog.ppc.o macmisc.ppc.o macnet.ppc.o macnoise.ppc.o ¶
-		macstore.ppc.o macterm.ppc.o macucs.ppc.o mimeenc.ppc.o ¶
-		misc.ppc.o mtcpnet.ppc.o otnet.ppc.o portfwd.ppc.o ¶
-		pproxy.ppc.o proxy.ppc.o raw.ppc.o rlogin.ppc.o sbcs.ppc.o ¶
-		sbcsdat.ppc.o settings.ppc.o slookup.ppc.o ssh.ppc.o ¶
-		sshaes.ppc.o sshblowf.ppc.o sshbn.ppc.o sshcrc.ppc.o ¶
-		sshcrcda.ppc.o sshdes.ppc.o sshdh.ppc.o sshdss.ppc.o ¶
-		sshmd5.ppc.o sshpubk.ppc.o sshrand.ppc.o sshrsa.ppc.o ¶
-		sshsh512.ppc.o sshsha.ppc.o sshzlib.ppc.o stricmp.ppc.o ¶
-		telnet.ppc.o terminal.ppc.o testback.ppc.o toucs.ppc.o ¶
-		tree234.ppc.o utf8.ppc.o version.ppc.o vsnprint.ppc.o ¶
-		wcwidth.ppc.o wildcard.ppc.o x11fwd.ppc.o xenc.ppc.o ¶
-		mac_res.rsrc
+PuTTY.ppc Ä be_all.ppc.o config.ppc.o cproxy.ppc.o dialog.ppc.o ¶
+		fromucs.ppc.o ldisc.ppc.o ldiscucs.ppc.o localenc.ppc.o ¶
+		logging.ppc.o mac.ppc.o macabout.ppc.o macctrls.ppc.o ¶
+		macdlg.ppc.o macenc.ppc.o macevlog.ppc.o macmisc.ppc.o ¶
+		macnet.ppc.o macnoise.ppc.o macstore.ppc.o macterm.ppc.o ¶
+		macucs.ppc.o mimeenc.ppc.o misc.ppc.o mtcpnet.ppc.o ¶
+		otnet.ppc.o portfwd.ppc.o pproxy.ppc.o proxy.ppc.o raw.ppc.o ¶
+		rlogin.ppc.o sbcs.ppc.o sbcsdat.ppc.o settings.ppc.o ¶
+		slookup.ppc.o ssh.ppc.o sshaes.ppc.o sshblowf.ppc.o ¶
+		sshbn.ppc.o sshcrc.ppc.o sshcrcda.ppc.o sshdes.ppc.o ¶
+		sshdh.ppc.o sshdss.ppc.o sshmd5.ppc.o sshpubk.ppc.o ¶
+		sshrand.ppc.o sshrsa.ppc.o sshsh512.ppc.o sshsha.ppc.o ¶
+		sshzlib.ppc.o stricmp.ppc.o telnet.ppc.o terminal.ppc.o ¶
+		testback.ppc.o toucs.ppc.o tree234.ppc.o utf8.ppc.o ¶
+		version.ppc.o vsnprint.ppc.o wcwidth.ppc.o wildcard.ppc.o ¶
+		x11fwd.ppc.o xenc.ppc.o mac_res.rsrc
 	Duplicate -y mac_res.rsrc {Targ}
 	{Link_PPC} -o {Targ} -fragname PuTTY {LinkOptions_PPC} be_all.ppc.o ¶
-		config.ppc.o dialog.ppc.o fromucs.ppc.o ldisc.ppc.o ¶
-		ldiscucs.ppc.o localenc.ppc.o logging.ppc.o mac.ppc.o ¶
-		macabout.ppc.o macctrls.ppc.o macdlg.ppc.o macenc.ppc.o ¶
-		macevlog.ppc.o macmisc.ppc.o macnet.ppc.o macnoise.ppc.o ¶
-		macstore.ppc.o macterm.ppc.o macucs.ppc.o mimeenc.ppc.o ¶
-		misc.ppc.o mtcpnet.ppc.o otnet.ppc.o portfwd.ppc.o ¶
-		pproxy.ppc.o proxy.ppc.o raw.ppc.o rlogin.ppc.o sbcs.ppc.o ¶
-		sbcsdat.ppc.o settings.ppc.o slookup.ppc.o ssh.ppc.o ¶
-		sshaes.ppc.o sshblowf.ppc.o sshbn.ppc.o sshcrc.ppc.o ¶
-		sshcrcda.ppc.o sshdes.ppc.o sshdh.ppc.o sshdss.ppc.o ¶
-		sshmd5.ppc.o sshpubk.ppc.o sshrand.ppc.o sshrsa.ppc.o ¶
-		sshsh512.ppc.o sshsha.ppc.o sshzlib.ppc.o stricmp.ppc.o ¶
-		telnet.ppc.o terminal.ppc.o testback.ppc.o toucs.ppc.o ¶
-		tree234.ppc.o utf8.ppc.o version.ppc.o vsnprint.ppc.o ¶
-		wcwidth.ppc.o wildcard.ppc.o x11fwd.ppc.o xenc.ppc.o ¶
-		{Libs_PPC}
+		config.ppc.o cproxy.ppc.o dialog.ppc.o fromucs.ppc.o ¶
+		ldisc.ppc.o ldiscucs.ppc.o localenc.ppc.o logging.ppc.o ¶
+		mac.ppc.o macabout.ppc.o macctrls.ppc.o macdlg.ppc.o ¶
+		macenc.ppc.o macevlog.ppc.o macmisc.ppc.o macnet.ppc.o ¶
+		macnoise.ppc.o macstore.ppc.o macterm.ppc.o macucs.ppc.o ¶
+		mimeenc.ppc.o misc.ppc.o mtcpnet.ppc.o otnet.ppc.o ¶
+		portfwd.ppc.o pproxy.ppc.o proxy.ppc.o raw.ppc.o ¶
+		rlogin.ppc.o sbcs.ppc.o sbcsdat.ppc.o settings.ppc.o ¶
+		slookup.ppc.o ssh.ppc.o sshaes.ppc.o sshblowf.ppc.o ¶
+		sshbn.ppc.o sshcrc.ppc.o sshcrcda.ppc.o sshdes.ppc.o ¶
+		sshdh.ppc.o sshdss.ppc.o sshmd5.ppc.o sshpubk.ppc.o ¶
+		sshrand.ppc.o sshrsa.ppc.o sshsh512.ppc.o sshsha.ppc.o ¶
+		sshzlib.ppc.o stricmp.ppc.o telnet.ppc.o terminal.ppc.o ¶
+		testback.ppc.o toucs.ppc.o tree234.ppc.o utf8.ppc.o ¶
+		version.ppc.o vsnprint.ppc.o wcwidth.ppc.o wildcard.ppc.o ¶
+		x11fwd.ppc.o xenc.ppc.o {Libs_PPC}
 	SetFile -a BMi {Targ}
 
-PuTTY.carbon Ä be_all.carbon.o config.carbon.o dialog.carbon.o ¶
-		fromucs.carbon.o ldisc.carbon.o ldiscucs.carbon.o ¶
-		localenc.carbon.o logging.carbon.o mac.carbon.o ¶
-		macabout.carbon.o macctrls.carbon.o macdlg.carbon.o ¶
-		macenc.carbon.o macevlog.carbon.o macmisc.carbon.o ¶
-		macnet.carbon.o macnoise.carbon.o macstore.carbon.o ¶
-		macterm.carbon.o macucs.carbon.o mimeenc.carbon.o ¶
-		misc.carbon.o mtcpnet.carbon.o otnet.carbon.o ¶
-		portfwd.carbon.o pproxy.carbon.o proxy.carbon.o raw.carbon.o ¶
-		rlogin.carbon.o sbcs.carbon.o sbcsdat.carbon.o ¶
-		settings.carbon.o slookup.carbon.o ssh.carbon.o ¶
-		sshaes.carbon.o sshblowf.carbon.o sshbn.carbon.o ¶
-		sshcrc.carbon.o sshcrcda.carbon.o sshdes.carbon.o ¶
-		sshdh.carbon.o sshdss.carbon.o sshmd5.carbon.o ¶
-		sshpubk.carbon.o sshrand.carbon.o sshrsa.carbon.o ¶
-		sshsh512.carbon.o sshsha.carbon.o sshzlib.carbon.o ¶
-		stricmp.carbon.o telnet.carbon.o terminal.carbon.o ¶
-		testback.carbon.o toucs.carbon.o tree234.carbon.o ¶
-		utf8.carbon.o version.carbon.o vsnprint.carbon.o ¶
-		wcwidth.carbon.o wildcard.carbon.o x11fwd.carbon.o ¶
-		xenc.carbon.o mac_res.rsrc
+PuTTY.carbon Ä be_all.carbon.o config.carbon.o cproxy.carbon.o ¶
+		dialog.carbon.o fromucs.carbon.o ldisc.carbon.o ¶
+		ldiscucs.carbon.o localenc.carbon.o logging.carbon.o ¶
+		mac.carbon.o macabout.carbon.o macctrls.carbon.o ¶
+		macdlg.carbon.o macenc.carbon.o macevlog.carbon.o ¶
+		macmisc.carbon.o macnet.carbon.o macnoise.carbon.o ¶
+		macstore.carbon.o macterm.carbon.o macucs.carbon.o ¶
+		mimeenc.carbon.o misc.carbon.o mtcpnet.carbon.o ¶
+		otnet.carbon.o portfwd.carbon.o pproxy.carbon.o ¶
+		proxy.carbon.o raw.carbon.o rlogin.carbon.o sbcs.carbon.o ¶
+		sbcsdat.carbon.o settings.carbon.o slookup.carbon.o ¶
+		ssh.carbon.o sshaes.carbon.o sshblowf.carbon.o ¶
+		sshbn.carbon.o sshcrc.carbon.o sshcrcda.carbon.o ¶
+		sshdes.carbon.o sshdh.carbon.o sshdss.carbon.o ¶
+		sshmd5.carbon.o sshpubk.carbon.o sshrand.carbon.o ¶
+		sshrsa.carbon.o sshsh512.carbon.o sshsha.carbon.o ¶
+		sshzlib.carbon.o stricmp.carbon.o telnet.carbon.o ¶
+		terminal.carbon.o testback.carbon.o toucs.carbon.o ¶
+		tree234.carbon.o utf8.carbon.o version.carbon.o ¶
+		vsnprint.carbon.o wcwidth.carbon.o wildcard.carbon.o ¶
+		x11fwd.carbon.o xenc.carbon.o mac_res.rsrc
 	Duplicate -y mac_res.rsrc {Targ}
 	{Link_Carbon} -o {Targ} -fragname PuTTY {LinkOptions_Carbon} ¶
-		be_all.carbon.o config.carbon.o dialog.carbon.o ¶
-		fromucs.carbon.o ldisc.carbon.o ldiscucs.carbon.o ¶
-		localenc.carbon.o logging.carbon.o mac.carbon.o ¶
-		macabout.carbon.o macctrls.carbon.o macdlg.carbon.o ¶
-		macenc.carbon.o macevlog.carbon.o macmisc.carbon.o ¶
-		macnet.carbon.o macnoise.carbon.o macstore.carbon.o ¶
-		macterm.carbon.o macucs.carbon.o mimeenc.carbon.o ¶
-		misc.carbon.o mtcpnet.carbon.o otnet.carbon.o ¶
-		portfwd.carbon.o pproxy.carbon.o proxy.carbon.o raw.carbon.o ¶
-		rlogin.carbon.o sbcs.carbon.o sbcsdat.carbon.o ¶
-		settings.carbon.o slookup.carbon.o ssh.carbon.o ¶
-		sshaes.carbon.o sshblowf.carbon.o sshbn.carbon.o ¶
-		sshcrc.carbon.o sshcrcda.carbon.o sshdes.carbon.o ¶
-		sshdh.carbon.o sshdss.carbon.o sshmd5.carbon.o ¶
-		sshpubk.carbon.o sshrand.carbon.o sshrsa.carbon.o ¶
-		sshsh512.carbon.o sshsha.carbon.o sshzlib.carbon.o ¶
-		stricmp.carbon.o telnet.carbon.o terminal.carbon.o ¶
-		testback.carbon.o toucs.carbon.o tree234.carbon.o ¶
-		utf8.carbon.o version.carbon.o vsnprint.carbon.o ¶
-		wcwidth.carbon.o wildcard.carbon.o x11fwd.carbon.o ¶
-		xenc.carbon.o {Libs_Carbon}
+		be_all.carbon.o config.carbon.o cproxy.carbon.o ¶
+		dialog.carbon.o fromucs.carbon.o ldisc.carbon.o ¶
+		ldiscucs.carbon.o localenc.carbon.o logging.carbon.o ¶
+		mac.carbon.o macabout.carbon.o macctrls.carbon.o ¶
+		macdlg.carbon.o macenc.carbon.o macevlog.carbon.o ¶
+		macmisc.carbon.o macnet.carbon.o macnoise.carbon.o ¶
+		macstore.carbon.o macterm.carbon.o macucs.carbon.o ¶
+		mimeenc.carbon.o misc.carbon.o mtcpnet.carbon.o ¶
+		otnet.carbon.o portfwd.carbon.o pproxy.carbon.o ¶
+		proxy.carbon.o raw.carbon.o rlogin.carbon.o sbcs.carbon.o ¶
+		sbcsdat.carbon.o settings.carbon.o slookup.carbon.o ¶
+		ssh.carbon.o sshaes.carbon.o sshblowf.carbon.o ¶
+		sshbn.carbon.o sshcrc.carbon.o sshcrcda.carbon.o ¶
+		sshdes.carbon.o sshdh.carbon.o sshdss.carbon.o ¶
+		sshmd5.carbon.o sshpubk.carbon.o sshrand.carbon.o ¶
+		sshrsa.carbon.o sshsh512.carbon.o sshsha.carbon.o ¶
+		sshzlib.carbon.o stricmp.carbon.o telnet.carbon.o ¶
+		terminal.carbon.o testback.carbon.o toucs.carbon.o ¶
+		tree234.carbon.o utf8.carbon.o version.carbon.o ¶
+		vsnprint.carbon.o wcwidth.carbon.o wildcard.carbon.o ¶
+		x11fwd.carbon.o xenc.carbon.o {Libs_Carbon}
 	SetFile -a BMi {Targ}
 
 PuTTYgen Ä PuTTYgen.68k PuTTYgen.ppc PuTTYgen.carbon
@@ -400,12 +400,12 @@ PuTTYtel.68k Ä be_nossh.68k.o config.68k.o dialog.68k.o fromucs.68k.o ¶
 		mac.68k.o macabout.68k.o macctrls.68k.o macdlg.68k.o ¶
 		macenc.68k.o macevlog.68k.o macmisc.68k.o macnet.68k.o ¶
 		macstore.68k.o macterm.68k.o macucs.68k.o mimeenc.68k.o ¶
-		misc.68k.o mtcpnet.68k.o otnet.68k.o pproxy.68k.o ¶
-		proxy.68k.o raw.68k.o rlogin.68k.o sbcs.68k.o sbcsdat.68k.o ¶
-		settings.68k.o slookup.68k.o stricmp.68k.o telnet.68k.o ¶
-		terminal.68k.o testback.68k.o toucs.68k.o tree234.68k.o ¶
-		utf8.68k.o version.68k.o vsnprint.68k.o wcwidth.68k.o ¶
-		xenc.68k.o mac_res.rsrc
+		misc.68k.o mtcpnet.68k.o nocproxy.68k.o otnet.68k.o ¶
+		pproxy.68k.o proxy.68k.o raw.68k.o rlogin.68k.o sbcs.68k.o ¶
+		sbcsdat.68k.o settings.68k.o slookup.68k.o stricmp.68k.o ¶
+		telnet.68k.o terminal.68k.o testback.68k.o toucs.68k.o ¶
+		tree234.68k.o utf8.68k.o version.68k.o vsnprint.68k.o ¶
+		wcwidth.68k.o xenc.68k.o mac_res.rsrc
 	Duplicate -y mac_res.rsrc {Targ}
 	{Link_68K} -o {Targ} -fragname PuTTYtel {LinkOptions_68K} ¶
 		be_nossh.68k.o config.68k.o dialog.68k.o fromucs.68k.o ¶
@@ -413,12 +413,12 @@ PuTTYtel.68k Ä be_nossh.68k.o config.68k.o dialog.68k.o fromucs.68k.o ¶
 		mac.68k.o macabout.68k.o macctrls.68k.o macdlg.68k.o ¶
 		macenc.68k.o macevlog.68k.o macmisc.68k.o macnet.68k.o ¶
 		macstore.68k.o macterm.68k.o macucs.68k.o mimeenc.68k.o ¶
-		misc.68k.o mtcpnet.68k.o otnet.68k.o pproxy.68k.o ¶
-		proxy.68k.o raw.68k.o rlogin.68k.o sbcs.68k.o sbcsdat.68k.o ¶
-		settings.68k.o slookup.68k.o stricmp.68k.o telnet.68k.o ¶
-		terminal.68k.o testback.68k.o toucs.68k.o tree234.68k.o ¶
-		utf8.68k.o version.68k.o vsnprint.68k.o wcwidth.68k.o ¶
-		xenc.68k.o {Libs_68K}
+		misc.68k.o mtcpnet.68k.o nocproxy.68k.o otnet.68k.o ¶
+		pproxy.68k.o proxy.68k.o raw.68k.o rlogin.68k.o sbcs.68k.o ¶
+		sbcsdat.68k.o settings.68k.o slookup.68k.o stricmp.68k.o ¶
+		telnet.68k.o terminal.68k.o testback.68k.o toucs.68k.o ¶
+		tree234.68k.o utf8.68k.o version.68k.o vsnprint.68k.o ¶
+		wcwidth.68k.o xenc.68k.o {Libs_68K}
 	SetFile -a BMi {Targ}
 
 PuTTYtel.cfm68k Ä be_nossh.cfm68k.o config.cfm68k.o dialog.cfm68k.o ¶
@@ -428,13 +428,14 @@ PuTTYtel.cfm68k Ä be_nossh.cfm68k.o config.cfm68k.o dialog.cfm68k.o ¶
 		macenc.cfm68k.o macevlog.cfm68k.o macmisc.cfm68k.o ¶
 		macnet.cfm68k.o macstore.cfm68k.o macterm.cfm68k.o ¶
 		macucs.cfm68k.o mimeenc.cfm68k.o misc.cfm68k.o ¶
-		mtcpnet.cfm68k.o otnet.cfm68k.o pproxy.cfm68k.o ¶
-		proxy.cfm68k.o raw.cfm68k.o rlogin.cfm68k.o sbcs.cfm68k.o ¶
-		sbcsdat.cfm68k.o settings.cfm68k.o slookup.cfm68k.o ¶
-		stricmp.cfm68k.o telnet.cfm68k.o terminal.cfm68k.o ¶
-		testback.cfm68k.o toucs.cfm68k.o tree234.cfm68k.o ¶
-		utf8.cfm68k.o version.cfm68k.o vsnprint.cfm68k.o ¶
-		wcwidth.cfm68k.o xenc.cfm68k.o mac_res.rsrc
+		mtcpnet.cfm68k.o nocproxy.cfm68k.o otnet.cfm68k.o ¶
+		pproxy.cfm68k.o proxy.cfm68k.o raw.cfm68k.o rlogin.cfm68k.o ¶
+		sbcs.cfm68k.o sbcsdat.cfm68k.o settings.cfm68k.o ¶
+		slookup.cfm68k.o stricmp.cfm68k.o telnet.cfm68k.o ¶
+		terminal.cfm68k.o testback.cfm68k.o toucs.cfm68k.o ¶
+		tree234.cfm68k.o utf8.cfm68k.o version.cfm68k.o ¶
+		vsnprint.cfm68k.o wcwidth.cfm68k.o xenc.cfm68k.o ¶
+		mac_res.rsrc
 	Duplicate -y mac_res.rsrc {Targ}
 	{Link_CFM68K} -o {Targ} -fragname PuTTYtel {LinkOptions_CFM68K} ¶
 		be_nossh.cfm68k.o config.cfm68k.o dialog.cfm68k.o ¶
@@ -444,13 +445,14 @@ PuTTYtel.cfm68k Ä be_nossh.cfm68k.o config.cfm68k.o dialog.cfm68k.o ¶
 		macenc.cfm68k.o macevlog.cfm68k.o macmisc.cfm68k.o ¶
 		macnet.cfm68k.o macstore.cfm68k.o macterm.cfm68k.o ¶
 		macucs.cfm68k.o mimeenc.cfm68k.o misc.cfm68k.o ¶
-		mtcpnet.cfm68k.o otnet.cfm68k.o pproxy.cfm68k.o ¶
-		proxy.cfm68k.o raw.cfm68k.o rlogin.cfm68k.o sbcs.cfm68k.o ¶
-		sbcsdat.cfm68k.o settings.cfm68k.o slookup.cfm68k.o ¶
-		stricmp.cfm68k.o telnet.cfm68k.o terminal.cfm68k.o ¶
-		testback.cfm68k.o toucs.cfm68k.o tree234.cfm68k.o ¶
-		utf8.cfm68k.o version.cfm68k.o vsnprint.cfm68k.o ¶
-		wcwidth.cfm68k.o xenc.cfm68k.o {Libs_CFM68K}
+		mtcpnet.cfm68k.o nocproxy.cfm68k.o otnet.cfm68k.o ¶
+		pproxy.cfm68k.o proxy.cfm68k.o raw.cfm68k.o rlogin.cfm68k.o ¶
+		sbcs.cfm68k.o sbcsdat.cfm68k.o settings.cfm68k.o ¶
+		slookup.cfm68k.o stricmp.cfm68k.o telnet.cfm68k.o ¶
+		terminal.cfm68k.o testback.cfm68k.o toucs.cfm68k.o ¶
+		tree234.cfm68k.o utf8.cfm68k.o version.cfm68k.o ¶
+		vsnprint.cfm68k.o wcwidth.cfm68k.o xenc.cfm68k.o ¶
+		{Libs_CFM68K}
 	SetFile -a BMi {Targ}
 
 PuTTYtel.ppc Ä be_nossh.ppc.o config.ppc.o dialog.ppc.o fromucs.ppc.o ¶
@@ -458,12 +460,12 @@ PuTTYtel.ppc Ä be_nossh.ppc.o config.ppc.o dialog.ppc.o fromucs.ppc.o ¶
 		mac.ppc.o macabout.ppc.o macctrls.ppc.o macdlg.ppc.o ¶
 		macenc.ppc.o macevlog.ppc.o macmisc.ppc.o macnet.ppc.o ¶
 		macstore.ppc.o macterm.ppc.o macucs.ppc.o mimeenc.ppc.o ¶
-		misc.ppc.o mtcpnet.ppc.o otnet.ppc.o pproxy.ppc.o ¶
-		proxy.ppc.o raw.ppc.o rlogin.ppc.o sbcs.ppc.o sbcsdat.ppc.o ¶
-		settings.ppc.o slookup.ppc.o stricmp.ppc.o telnet.ppc.o ¶
-		terminal.ppc.o testback.ppc.o toucs.ppc.o tree234.ppc.o ¶
-		utf8.ppc.o version.ppc.o vsnprint.ppc.o wcwidth.ppc.o ¶
-		xenc.ppc.o mac_res.rsrc
+		misc.ppc.o mtcpnet.ppc.o nocproxy.ppc.o otnet.ppc.o ¶
+		pproxy.ppc.o proxy.ppc.o raw.ppc.o rlogin.ppc.o sbcs.ppc.o ¶
+		sbcsdat.ppc.o settings.ppc.o slookup.ppc.o stricmp.ppc.o ¶
+		telnet.ppc.o terminal.ppc.o testback.ppc.o toucs.ppc.o ¶
+		tree234.ppc.o utf8.ppc.o version.ppc.o vsnprint.ppc.o ¶
+		wcwidth.ppc.o xenc.ppc.o mac_res.rsrc
 	Duplicate -y mac_res.rsrc {Targ}
 	{Link_PPC} -o {Targ} -fragname PuTTYtel {LinkOptions_PPC} ¶
 		be_nossh.ppc.o config.ppc.o dialog.ppc.o fromucs.ppc.o ¶
@@ -471,12 +473,12 @@ PuTTYtel.ppc Ä be_nossh.ppc.o config.ppc.o dialog.ppc.o fromucs.ppc.o ¶
 		mac.ppc.o macabout.ppc.o macctrls.ppc.o macdlg.ppc.o ¶
 		macenc.ppc.o macevlog.ppc.o macmisc.ppc.o macnet.ppc.o ¶
 		macstore.ppc.o macterm.ppc.o macucs.ppc.o mimeenc.ppc.o ¶
-		misc.ppc.o mtcpnet.ppc.o otnet.ppc.o pproxy.ppc.o ¶
-		proxy.ppc.o raw.ppc.o rlogin.ppc.o sbcs.ppc.o sbcsdat.ppc.o ¶
-		settings.ppc.o slookup.ppc.o stricmp.ppc.o telnet.ppc.o ¶
-		terminal.ppc.o testback.ppc.o toucs.ppc.o tree234.ppc.o ¶
-		utf8.ppc.o version.ppc.o vsnprint.ppc.o wcwidth.ppc.o ¶
-		xenc.ppc.o {Libs_PPC}
+		misc.ppc.o mtcpnet.ppc.o nocproxy.ppc.o otnet.ppc.o ¶
+		pproxy.ppc.o proxy.ppc.o raw.ppc.o rlogin.ppc.o sbcs.ppc.o ¶
+		sbcsdat.ppc.o settings.ppc.o slookup.ppc.o stricmp.ppc.o ¶
+		telnet.ppc.o terminal.ppc.o testback.ppc.o toucs.ppc.o ¶
+		tree234.ppc.o utf8.ppc.o version.ppc.o vsnprint.ppc.o ¶
+		wcwidth.ppc.o xenc.ppc.o {Libs_PPC}
 	SetFile -a BMi {Targ}
 
 PuTTYtel.carbon Ä be_nossh.carbon.o config.carbon.o dialog.carbon.o ¶
@@ -486,13 +488,14 @@ PuTTYtel.carbon Ä be_nossh.carbon.o config.carbon.o dialog.carbon.o ¶
 		macenc.carbon.o macevlog.carbon.o macmisc.carbon.o ¶
 		macnet.carbon.o macstore.carbon.o macterm.carbon.o ¶
 		macucs.carbon.o mimeenc.carbon.o misc.carbon.o ¶
-		mtcpnet.carbon.o otnet.carbon.o pproxy.carbon.o ¶
-		proxy.carbon.o raw.carbon.o rlogin.carbon.o sbcs.carbon.o ¶
-		sbcsdat.carbon.o settings.carbon.o slookup.carbon.o ¶
-		stricmp.carbon.o telnet.carbon.o terminal.carbon.o ¶
-		testback.carbon.o toucs.carbon.o tree234.carbon.o ¶
-		utf8.carbon.o version.carbon.o vsnprint.carbon.o ¶
-		wcwidth.carbon.o xenc.carbon.o mac_res.rsrc
+		mtcpnet.carbon.o nocproxy.carbon.o otnet.carbon.o ¶
+		pproxy.carbon.o proxy.carbon.o raw.carbon.o rlogin.carbon.o ¶
+		sbcs.carbon.o sbcsdat.carbon.o settings.carbon.o ¶
+		slookup.carbon.o stricmp.carbon.o telnet.carbon.o ¶
+		terminal.carbon.o testback.carbon.o toucs.carbon.o ¶
+		tree234.carbon.o utf8.carbon.o version.carbon.o ¶
+		vsnprint.carbon.o wcwidth.carbon.o xenc.carbon.o ¶
+		mac_res.rsrc
 	Duplicate -y mac_res.rsrc {Targ}
 	{Link_Carbon} -o {Targ} -fragname PuTTYtel {LinkOptions_Carbon} ¶
 		be_nossh.carbon.o config.carbon.o dialog.carbon.o ¶
@@ -502,13 +505,14 @@ PuTTYtel.carbon Ä be_nossh.carbon.o config.carbon.o dialog.carbon.o ¶
 		macenc.carbon.o macevlog.carbon.o macmisc.carbon.o ¶
 		macnet.carbon.o macstore.carbon.o macterm.carbon.o ¶
 		macucs.carbon.o mimeenc.carbon.o misc.carbon.o ¶
-		mtcpnet.carbon.o otnet.carbon.o pproxy.carbon.o ¶
-		proxy.carbon.o raw.carbon.o rlogin.carbon.o sbcs.carbon.o ¶
-		sbcsdat.carbon.o settings.carbon.o slookup.carbon.o ¶
-		stricmp.carbon.o telnet.carbon.o terminal.carbon.o ¶
-		testback.carbon.o toucs.carbon.o tree234.carbon.o ¶
-		utf8.carbon.o version.carbon.o vsnprint.carbon.o ¶
-		wcwidth.carbon.o xenc.carbon.o {Libs_Carbon}
+		mtcpnet.carbon.o nocproxy.carbon.o otnet.carbon.o ¶
+		pproxy.carbon.o proxy.carbon.o raw.carbon.o rlogin.carbon.o ¶
+		sbcs.carbon.o sbcsdat.carbon.o settings.carbon.o ¶
+		slookup.carbon.o stricmp.carbon.o telnet.carbon.o ¶
+		terminal.carbon.o testback.carbon.o toucs.carbon.o ¶
+		tree234.carbon.o utf8.carbon.o version.carbon.o ¶
+		vsnprint.carbon.o wcwidth.carbon.o xenc.carbon.o ¶
+		{Libs_Carbon}
 	SetFile -a BMi {Targ}
 
 mac_res.rsrc Ä ::mac:mac_res.r ::mac:macresid.h ::mac:version.r
@@ -573,6 +577,12 @@ console.68k.o Ä ::.:console.c ::.:putty.h ::.:storage.h ::.:ssh.h ¶
 		::.:int64.h ::.:winstuff.h ::mac:macstuff.h ::unix:unix.h ¶
 		::.:tree234.h ::.:winhelp.h ::charset:charset.h
 	{C_68K} ::.:console.c -o {Targ} {COptions_68K}
+
+cproxy.68k.o Ä ::.:cproxy.c ::.:putty.h ::.:ssh.h ::.:network.h ::.:proxy.h ¶
+		::.:puttyps.h ::.:misc.h ::.:puttymem.h ::.:int64.h ¶
+		::.:winstuff.h ::mac:macstuff.h ::unix:unix.h ::.:tree234.h ¶
+		::.:winhelp.h ::charset:charset.h
+	{C_68K} ::.:cproxy.c -o {Targ} {COptions_68K}
 
 dialog.68k.o Ä ::.:dialog.c ::.:putty.h ::.:dialog.h ::.:puttyps.h ¶
 		::.:network.h ::.:misc.h ::.:winstuff.h ::mac:macstuff.h ¶
@@ -722,6 +732,12 @@ mtcpnet.68k.o Ä ::mac:mtcpnet.c ::.:putty.h ::.:network.h ::mac:mac.h ¶
 		::.:winstuff.h ::mac:macstuff.h ::unix:unix.h ::.:puttymem.h ¶
 		::.:winhelp.h
 	{C_68K} ::mac:mtcpnet.c -o {Targ} {COptions_68K}
+
+nocproxy.68k.o Ä ::.:nocproxy.c ::.:putty.h ::.:network.h ::.:proxy.h ¶
+		::.:puttyps.h ::.:misc.h ::.:winstuff.h ::mac:macstuff.h ¶
+		::unix:unix.h ::.:puttymem.h ::.:tree234.h ::.:winhelp.h ¶
+		::charset:charset.h
+	{C_68K} ::.:nocproxy.c -o {Targ} {COptions_68K}
 
 noise.68k.o Ä ::.:noise.c ::.:putty.h ::.:ssh.h ::.:storage.h ::.:puttyps.h ¶
 		::.:network.h ::.:misc.h ::.:puttymem.h ::.:int64.h ¶
@@ -1204,6 +1220,12 @@ console.cfm68k.o Ä ::.:console.c ::.:putty.h ::.:storage.h ::.:ssh.h ¶
 		::.:tree234.h ::.:winhelp.h ::charset:charset.h
 	{C_CFM68K} ::.:console.c -o {Targ} {COptions_CFM68K}
 
+cproxy.cfm68k.o Ä ::.:cproxy.c ::.:putty.h ::.:ssh.h ::.:network.h ¶
+		::.:proxy.h ::.:puttyps.h ::.:misc.h ::.:puttymem.h ¶
+		::.:int64.h ::.:winstuff.h ::mac:macstuff.h ::unix:unix.h ¶
+		::.:tree234.h ::.:winhelp.h ::charset:charset.h
+	{C_CFM68K} ::.:cproxy.c -o {Targ} {COptions_CFM68K}
+
 dialog.cfm68k.o Ä ::.:dialog.c ::.:putty.h ::.:dialog.h ::.:puttyps.h ¶
 		::.:network.h ::.:misc.h ::.:winstuff.h ::mac:macstuff.h ¶
 		::unix:unix.h ::.:puttymem.h ::.:tree234.h ::.:winhelp.h ¶
@@ -1357,6 +1379,12 @@ mtcpnet.cfm68k.o Ä ::mac:mtcpnet.c ::.:putty.h ::.:network.h ::mac:mac.h ¶
 		::.:winstuff.h ::mac:macstuff.h ::unix:unix.h ::.:puttymem.h ¶
 		::.:winhelp.h
 	{C_CFM68K} ::mac:mtcpnet.c -o {Targ} {COptions_CFM68K}
+
+nocproxy.cfm68k.o Ä ::.:nocproxy.c ::.:putty.h ::.:network.h ::.:proxy.h ¶
+		::.:puttyps.h ::.:misc.h ::.:winstuff.h ::mac:macstuff.h ¶
+		::unix:unix.h ::.:puttymem.h ::.:tree234.h ::.:winhelp.h ¶
+		::charset:charset.h
+	{C_CFM68K} ::.:nocproxy.c -o {Targ} {COptions_CFM68K}
 
 noise.cfm68k.o Ä ::.:noise.c ::.:putty.h ::.:ssh.h ::.:storage.h ¶
 		::.:puttyps.h ::.:network.h ::.:misc.h ::.:puttymem.h ¶
@@ -1856,6 +1884,14 @@ console.ppc.o Ä ::.:console.c ::.:putty.h ::.:storage.h ::.:ssh.h ¶
 	setfile -t XCOF {Targ}
 	{C_PPC} ::.:console.c -o {Targ} {COptions_PPC}
 
+cproxy.ppc.o Ä ::.:cproxy.c ::.:putty.h ::.:ssh.h ::.:network.h ::.:proxy.h ¶
+		::.:puttyps.h ::.:misc.h ::.:puttymem.h ::.:int64.h ¶
+		::.:winstuff.h ::mac:macstuff.h ::unix:unix.h ::.:tree234.h ¶
+		::.:winhelp.h ::charset:charset.h
+	echo -n > {Targ}
+	setfile -t XCOF {Targ}
+	{C_PPC} ::.:cproxy.c -o {Targ} {COptions_PPC}
+
 dialog.ppc.o Ä ::.:dialog.c ::.:putty.h ::.:dialog.h ::.:puttyps.h ¶
 		::.:network.h ::.:misc.h ::.:winstuff.h ::mac:macstuff.h ¶
 		::unix:unix.h ::.:puttymem.h ::.:tree234.h ::.:winhelp.h ¶
@@ -2060,6 +2096,14 @@ mtcpnet.ppc.o Ä ::mac:mtcpnet.c ::.:putty.h ::.:network.h ::mac:mac.h ¶
 	echo -n > {Targ}
 	setfile -t XCOF {Targ}
 	{C_PPC} ::mac:mtcpnet.c -o {Targ} {COptions_PPC}
+
+nocproxy.ppc.o Ä ::.:nocproxy.c ::.:putty.h ::.:network.h ::.:proxy.h ¶
+		::.:puttyps.h ::.:misc.h ::.:winstuff.h ::mac:macstuff.h ¶
+		::unix:unix.h ::.:puttymem.h ::.:tree234.h ::.:winhelp.h ¶
+		::charset:charset.h
+	echo -n > {Targ}
+	setfile -t XCOF {Targ}
+	{C_PPC} ::.:nocproxy.c -o {Targ} {COptions_PPC}
 
 noise.ppc.o Ä ::.:noise.c ::.:putty.h ::.:ssh.h ::.:storage.h ::.:puttyps.h ¶
 		::.:network.h ::.:misc.h ::.:puttymem.h ::.:int64.h ¶
@@ -2724,6 +2768,14 @@ console.carbon.o Ä ::.:console.c ::.:putty.h ::.:storage.h ::.:ssh.h ¶
 	setfile -t XCOF {Targ}
 	{C_Carbon} ::.:console.c -o {Targ} {COptions_Carbon}
 
+cproxy.carbon.o Ä ::.:cproxy.c ::.:putty.h ::.:ssh.h ::.:network.h ¶
+		::.:proxy.h ::.:puttyps.h ::.:misc.h ::.:puttymem.h ¶
+		::.:int64.h ::.:winstuff.h ::mac:macstuff.h ::unix:unix.h ¶
+		::.:tree234.h ::.:winhelp.h ::charset:charset.h
+	echo -n > {Targ}
+	setfile -t XCOF {Targ}
+	{C_Carbon} ::.:cproxy.c -o {Targ} {COptions_Carbon}
+
 dialog.carbon.o Ä ::.:dialog.c ::.:putty.h ::.:dialog.h ::.:puttyps.h ¶
 		::.:network.h ::.:misc.h ::.:winstuff.h ::mac:macstuff.h ¶
 		::unix:unix.h ::.:puttymem.h ::.:tree234.h ::.:winhelp.h ¶
@@ -2933,6 +2985,14 @@ mtcpnet.carbon.o Ä ::mac:mtcpnet.c ::.:putty.h ::.:network.h ::mac:mac.h ¶
 	echo -n > {Targ}
 	setfile -t XCOF {Targ}
 	{C_Carbon} ::mac:mtcpnet.c -o {Targ} {COptions_Carbon}
+
+nocproxy.carbon.o Ä ::.:nocproxy.c ::.:putty.h ::.:network.h ::.:proxy.h ¶
+		::.:puttyps.h ::.:misc.h ::.:winstuff.h ::mac:macstuff.h ¶
+		::unix:unix.h ::.:puttymem.h ::.:tree234.h ::.:winhelp.h ¶
+		::charset:charset.h
+	echo -n > {Targ}
+	setfile -t XCOF {Targ}
+	{C_Carbon} ::.:nocproxy.c -o {Targ} {COptions_Carbon}
 
 noise.carbon.o Ä ::.:noise.c ::.:putty.h ::.:ssh.h ::.:storage.h ¶
 		::.:puttyps.h ::.:network.h ::.:misc.h ::.:puttymem.h ¶

@@ -1,4 +1,4 @@
-\versionid $Id: faq.but,v 1.73 2004/07/29 10:23:48 jacob Exp $
+\versionid $Id: faq.but,v 1.82 2004/10/08 12:38:08 jacob Exp $
 
 \A{faq} PuTTY FAQ
 
@@ -307,7 +307,7 @@ a new system and doing the port for that.
 
 However, some of the work has been done by other people, and a beta
 port of PuTTY for the Nokia 9200 Communicator series is available
-from \W{http://www.s2.org/putty/}\cw{http://www.s2.org/putty/}
+from \W{http://s2putty.sourceforge.net/}\cw{http://s2putty.sourceforge.net/}
 
 \H{faq-embedding} Embedding PuTTY in other programs
 
@@ -867,6 +867,46 @@ The reason why this only started to be a problem in 0.54 is because
 the alternate screen, and previous versions of PuTTY did not support
 this sequence.
 
+\S{faq-alternate-localhost}{Question} Since I upgraded Windows XP
+to Service Pack 2, I can't use addresses like \cw{127.0.0.2}.
+
+Some people who ask PuTTY to listen on localhost addresses other
+than \cw{127.0.0.1} to forward services such as SMB and Windows
+Terminal Services have found that doing so no longer works since
+they upgraded to WinXP SP2.
+
+This is apparently an issue with SP2 that is acknowledged by Microsoft
+in MS Knowledge Base article
+\W{http://support.microsoft.com/default.aspx?scid=kb;en-us;884020}{884020}.
+The article links to a fix you can download.
+
+(\e{However}, we've been told that SP2 \e{also} fixes the bug that
+means you need to use non-\cw{127.0.0.1} addresses to forward
+Terminal Services in the first place.)
+
+\S{faq-missing-slash}{Question} PSFTP commands seem to be missing a
+directory separator (slash). 
+
+Some people have reported the following incorrect behaviour with
+PSFTP:
+
+\c psftp> pwd
+\e        iii
+\c Remote directory is /dir1/dir2
+\c psftp> get filename.ext
+\e        iiiiiiiiiiiiiiii
+\c /dir1/dir2filename.ext: no such file or directory
+
+This is not a bug in PSFTP. There is a known bug in some versions of
+portable OpenSSH
+(\W{http://bugzilla.mindrot.org/show_bug.cgi?id=697}{bug 697}) that
+causes these symptoms; it appears to have been introduced around
+3.7.x. It manifests only on certain platforms (AIX is what has been
+reported to us).
+
+There is a patch for OpenSSH attached to that bug; it's also fixed in
+recent versions of portable OpenSSH (from around 3.8).
+
 \H{faq-secure} Security questions
 
 \S{faq-publicpc}{Question} Is it safe for me to download PuTTY and
@@ -1056,8 +1096,8 @@ cover disk / distribute it with other software / etc?
 
 Yes. You need not bother asking us explicitly for permission. You
 already have permission. Redistribution of the unmodified PuTTY
-binary in this way is entirely permitted by our licence, and you are
-welcome to do it as much as you like.
+binary in this way is entirely permitted by our licence (see
+\k{licence}), and you are welcome to do it as much as you like.
 
 If you are distributing PuTTY within your own organisation, or for
 use with your own product, then we recommend (but do not insist)

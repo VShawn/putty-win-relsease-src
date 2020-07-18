@@ -106,6 +106,10 @@ SOURCE=..\..\.\console.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\.\cproxy.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\.\ldisc.c
 # End Source File
 # Begin Source File

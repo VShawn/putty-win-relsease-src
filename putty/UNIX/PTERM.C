@@ -44,7 +44,8 @@ struct gui_data {
     GtkWidget *window, *area, *sbar;
     GtkBox *hbox;
     GtkAdjustment *sbar_adjust;
-    GtkWidget *menu, *specialsmenu, *specialsitem1, *specialsitem2;
+    GtkWidget *menu, *specialsmenu, *specialsitem1, *specialsitem2,
+	*restartitem;
     GtkWidget *sessionsmenu;
     GdkPixmap *pixmap;
     GdkFont *fonts[4];                 /* normal, bold, wide, widebold */
@@ -93,6 +94,8 @@ struct draw_ctx {
 static int send_raw_mouse;
 
 static char *app_name = "pterm";
+
+static void start_backend(struct gui_data *inst);
 
 char *x_get_default(const char *key)
 {
@@ -711,7 +714,7 @@ gint key_event(GtkWidget *widget, GdkEventKey *event, gpointer data)
 		 * in xterm function key mode we change which two...
 		 */
 	      case GDK_KP_Add:
-		if (inst->cfg.funky_type == 2) {
+		if (inst->cfg.funky_type == FUNKY_XTERM) {
 		    if (event->state & GDK_SHIFT_MASK)
 			xkey = 'l';
 		    else
@@ -841,7 +844,7 @@ gint key_event(GtkWidget *widget, GdkEventKey *event, gpointer data)
 		break;
 	    }
 	    /* Reorder edit keys to physical order */
-	    if (inst->cfg.funky_type == 3 && code <= 6)
+	    if (inst->cfg.funky_type == FUNKY_VT400 && code <= 6)
 		code = "\0\2\1\4\5\3\6"[code];
 
 	    if (inst->term->vt52_mode && code > 0 && code <= 6) {
@@ -850,7 +853,7 @@ gint key_event(GtkWidget *widget, GdkEventKey *event, gpointer data)
 		goto done;
 	    }
 
-	    if (inst->cfg.funky_type == 5 &&     /* SCO function keys */
+	    if (inst->cfg.funky_type == FUNKY_SCO &&     /* SCO function keys */
 		code >= 11 && code <= 34) {
 		char codes[] = "MNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz@[\\]^_`{";
 		int index = 0;
@@ -874,7 +877,7 @@ gint key_event(GtkWidget *widget, GdkEventKey *event, gpointer data)
 		use_ucsoutput = FALSE;
 		goto done;
 	    }
-	    if (inst->cfg.funky_type == 5 &&     /* SCO small keypad */
+	    if (inst->cfg.funky_type == FUNKY_SCO &&     /* SCO small keypad */
 		code >= 1 && code <= 6) {
 		char codes[] = "HL.FIG";
 		if (code == 3) {
@@ -886,7 +889,7 @@ gint key_event(GtkWidget *widget, GdkEventKey *event, gpointer data)
 		use_ucsoutput = FALSE;
 		goto done;
 	    }
-	    if ((inst->term->vt52_mode || inst->cfg.funky_type == 4) &&
+	    if ((inst->term->vt52_mode || inst->cfg.funky_type == FUNKY_VT100P) &&
 		code >= 11 && code <= 24) {
 		int offt = 0;
 		if (code > 15)
@@ -902,12 +905,12 @@ gint key_event(GtkWidget *widget, GdkEventKey *event, gpointer data)
 		use_ucsoutput = FALSE;
 		goto done;
 	    }
-	    if (inst->cfg.funky_type == 1 && code >= 11 && code <= 15) {
+	    if (inst->cfg.funky_type == FUNKY_LINUX && code >= 11 && code <= 15) {
 		end = 1 + sprintf(output+1, "\x1B[[%c", code + 'A' - 11);
 		use_ucsoutput = FALSE;
 		goto done;
 	    }
-	    if (inst->cfg.funky_type == 2 && code >= 11 && code <= 14) {
+	    if (inst->cfg.funky_type == FUNKY_XTERM && code >= 11 && code <= 14) {
 		if (inst->term->vt52_mode)
 		    end = 1 + sprintf(output+1, "\x1B%c", code + 'P' - 11);
 		else
@@ -981,7 +984,8 @@ gint key_event(GtkWidget *widget, GdkEventKey *event, gpointer data)
 	     * should never matter.
 	     */
 	    output[end] = '\0';	       /* NUL-terminate */
-	    ldisc_send(inst->ldisc, output+start, -2, 1);
+	    if (inst->ldisc)
+		ldisc_send(inst->ldisc, output+start, -2, 1);
 	} else if (!inst->direct_to_font) {
 	    if (!use_ucsoutput) {
 		/*
@@ -996,21 +1000,24 @@ gint key_event(GtkWidget *widget, GdkEventKey *event, gpointer data)
 		 * far as I can tell, and it's poorly documented
 		 * even in 2.0, so it'll have to wait.
 		 */
-		lpage_send(inst->ldisc, CS_ISO8859_1, output+start,
-			   end-start, 1);
+		if (inst->ldisc)
+		    lpage_send(inst->ldisc, CS_ISO8859_1, output+start,
+			       end-start, 1);
 	    } else {
 		/*
 		 * We generated our own Unicode key data from the
 		 * keysym, so use that instead.
 		 */
-		luni_send(inst->ldisc, ucsoutput+start, end-start, 1);
+		if (inst->ldisc)
+		    luni_send(inst->ldisc, ucsoutput+start, end-start, 1);
 	    }
 	} else {
 	    /*
 	     * In direct-to-font mode, we just send the string
 	     * exactly as we received it.
 	     */
-	    ldisc_send(inst->ldisc, output+start, end-start, 1);
+	    if (inst->ldisc)
+		ldisc_send(inst->ldisc, output+start, end-start, 1);
 	}
 
 	show_mouseptr(inst, 0);
@@ -1134,6 +1141,17 @@ gint timer_func(gpointer data)
 	if (inst->cfg.close_on_exit == FORCE_ON ||
 	    (inst->cfg.close_on_exit == AUTO && exitcode == 0))
 	    exit(0);		       /* just go. */
+	if (inst->ldisc) {
+	    ldisc_free(inst->ldisc);
+	    inst->ldisc = NULL;
+	}
+	if (inst->back) {
+	    inst->back->free(inst->backhandle);
+	    inst->backhandle = NULL;
+	    inst->back = NULL;
+	    update_specials_menu(inst);
+	}
+	gtk_widget_show(inst->restartitem);
     }
 
     term_update(inst->term);
@@ -1942,7 +1960,7 @@ void do_text_internal(Context ctx, int x, int y, char *text, int len,
 			    y*inst->font_height+inst->cfg.window_border,
 			    x*inst->font_width+inst->cfg.window_border + 2*i+1,
 			    y*inst->font_height+inst->cfg.window_border,
-			    len * inst->font_width - i, inst->font_height);
+			    len * widefactor * inst->font_width - i, inst->font_height);
 	}
 	len *= 2;
 	if (lattr != LATTR_WIDE) {
@@ -1956,9 +1974,9 @@ void do_text_internal(Context ctx, int x, int y, char *text, int len,
 		gdk_draw_pixmap(inst->pixmap, gc, inst->pixmap,
 				x*inst->font_width+inst->cfg.window_border,
 				y*inst->font_height+inst->cfg.window_border+dt*i+db,
-				x*widefactor*inst->font_width+inst->cfg.window_border,
+				x*inst->font_width+inst->cfg.window_border,
 				y*inst->font_height+inst->cfg.window_border+dt*(i+1),
-				len * inst->font_width, inst->font_height-i-1);
+				len * widefactor * inst->font_width, inst->font_height-i-1);
 	    }
 	}
     }
@@ -2004,7 +2022,7 @@ void do_cursor(Context ctx, int x, int y, char *text, int len,
     struct gui_data *inst = dctx->inst;
     GdkGC *gc = dctx->gc;
 
-    int passive, widefactor;
+    int active, passive, widefactor;
 
     if (attr & TATTR_PASCURS) {
 	attr &= ~TATTR_PASCURS;
@@ -2013,7 +2031,9 @@ void do_cursor(Context ctx, int x, int y, char *text, int len,
 	passive = 0;
     if ((attr & TATTR_ACTCURS) && inst->cfg.cursor_type != 0) {
 	attr &= ~TATTR_ACTCURS;
-    }
+        active = 1;
+    } else
+        active = 0;
     do_text_internal(ctx, x, y, text, len, attr, lattr);
 
     if (attr & ATTR_WIDE) {
@@ -2042,7 +2062,7 @@ void do_cursor(Context ctx, int x, int y, char *text, int len,
 	    gdk_draw_rectangle(inst->pixmap, gc, 0,
 			       x*inst->font_width+inst->cfg.window_border,
 			       y*inst->font_height+inst->cfg.window_border,
-			       len*inst->font_width-1, inst->font_height-1);
+			       len*widefactor*inst->font_width-1, inst->font_height-1);
 	}
     } else {
 	int uheight;
@@ -2064,7 +2084,7 @@ void do_cursor(Context ctx, int x, int y, char *text, int len,
 	    starty = y * inst->font_height + inst->cfg.window_border + uheight;
 	    dx = 1;
 	    dy = 0;
-	    length = len * char_width;
+	    length = len * widefactor * char_width;
 	} else {
 	    int xadjust = 0;
 	    if (attr & TATTR_RIGHTCURS)
@@ -2085,10 +2105,10 @@ void do_cursor(Context ctx, int x, int y, char *text, int len,
 		startx += dx;
 		starty += dy;
 	    }
-	} else {
+	} else if (active) {
 	    gdk_draw_line(inst->pixmap, gc, startx, starty,
 			  startx + (length-1) * dx, starty + (length-1) * dy);
-	}
+	} /* else no cursor (e.g., blinked off) */
     }
 
     gdk_draw_pixmap(inst->area->window, gc, inst->pixmap,
@@ -2701,8 +2721,8 @@ void setup_fonts_ucs(struct gui_data *inst)
     inst->font_width = gdk_char_width(inst->fonts[0], ' ');
     inst->font_height = inst->fonts[0]->ascent + inst->fonts[0]->descent;
 
-    inst->direct_to_font = init_ucs(&inst->ucsdata,
-				    inst->cfg.line_codepage, font_charset,
+    inst->direct_to_font = init_ucs(&inst->ucsdata, inst->cfg.line_codepage,
+				    inst->cfg.utf8_override, font_charset,
 				    inst->cfg.vtmode);
 }
 
@@ -2732,7 +2752,8 @@ void reset_terminal_menuitem(GtkMenuItem *item, gpointer data)
 {
     struct gui_data *inst = (struct gui_data *)data;
     term_pwron(inst->term);
-    ldisc_send(inst->ldisc, NULL, 0, 0);
+    if (inst->ldisc)
+	ldisc_send(inst->ldisc, NULL, 0, 0);
 }
 
 void copy_all_menuitem(GtkMenuItem *item, gpointer data)
@@ -2747,7 +2768,8 @@ void special_menuitem(GtkMenuItem *item, gpointer data)
     int code = GPOINTER_TO_INT(gtk_object_get_data(GTK_OBJECT(item),
 						   "user-data"));
 
-    inst->back->special(inst->backhandle, code);
+    if (inst->back)
+	inst->back->special(inst->backhandle, code);
 }
 
 void about_menuitem(GtkMenuItem *item, gpointer data)
@@ -2788,11 +2810,13 @@ void change_settings_menuitem(GtkMenuItem *item, gpointer data)
          * Flush the line discipline's edit buffer in the case
          * where local editing has just been disabled.
          */
-        ldisc_send(inst->ldisc, NULL, 0, 0);
+        if (inst->ldisc)
+	    ldisc_send(inst->ldisc, NULL, 0, 0);
         /* Pass new config data to the terminal */
         term_reconfig(inst->term, &cfg2);
         /* Pass new config data to the back end */
-        inst->back->reconfig(inst->backhandle, &cfg2);
+        if (inst->back)
+	    inst->back->reconfig(inst->backhandle, &cfg2);
 
         /*
          * Just setting inst->cfg is sufficient to cause colour
@@ -3083,6 +3107,17 @@ void new_session_menuitem(GtkMenuItem *item, gpointer data)
     fork_and_exec_self(inst, -1, NULL);
 }
 
+void restart_session_menuitem(GtkMenuItem *item, gpointer data)
+{
+    struct gui_data *inst = (struct gui_data *)data;
+
+    if (!inst->back) {
+	logevent(inst, "----- Session restarted -----");
+	start_backend(inst);
+	inst->exited = FALSE;
+    }
+}
+
 void saved_session_menuitem(GtkMenuItem *item, gpointer data)
 {
     struct gui_data *inst = (struct gui_data *)data;
@@ -3104,23 +3139,56 @@ void update_specials_menu(void *frontend)
 
     const struct telnet_special *specials;
 
-    specials = inst->back->get_specials(inst->backhandle);
+    if (inst->back)
+	specials = inst->back->get_specials(inst->backhandle);
+    else
+	specials = NULL;
+
+    /* I believe this disposes of submenus too. */
     gtk_container_foreach(GTK_CONTAINER(inst->specialsmenu),
 			  (GtkCallback)gtk_widget_destroy, NULL);
     if (specials) {
 	int i;
-	GtkWidget *menuitem;
-	for (i = 0; specials[i].name; i++) {
-	    if (*specials[i].name) {
+	GtkWidget *menu = inst->specialsmenu;
+	/* A lame "stack" for submenus that will do for now. */
+	GtkWidget *saved_menu = NULL;
+	int nesting = 1;
+	for (i = 0; nesting > 0; i++) {
+	    GtkWidget *menuitem = NULL;
+	    switch (specials[i].code) {
+	      case TS_SUBMENU:
+		assert (nesting < 2);
+		saved_menu = menu; /* XXX lame stacking */
+		menu = gtk_menu_new();
+		menuitem = gtk_menu_item_new_with_label(specials[i].name);
+		gtk_menu_item_set_submenu(GTK_MENU_ITEM(menuitem), menu);
+		gtk_container_add(GTK_CONTAINER(saved_menu), menuitem);
+		gtk_widget_show(menuitem);
+		menuitem = NULL;
+		nesting++;
+		break;
+	      case TS_EXITMENU:
+		nesting--;
+		if (nesting) {
+		    menu = saved_menu; /* XXX lame stacking */
+		    saved_menu = NULL;
+		}
+		break;
+	      case TS_SEP:
+		menuitem = gtk_menu_item_new();
+		break;
+	      default:
 		menuitem = gtk_menu_item_new_with_label(specials[i].name);
 		gtk_object_set_data(GTK_OBJECT(menuitem), "user-data",
 				    GINT_TO_POINTER(specials[i].code));
 		gtk_signal_connect(GTK_OBJECT(menuitem), "activate",
 				   GTK_SIGNAL_FUNC(special_menuitem), inst);
-	    } else
-		menuitem = gtk_menu_item_new();
-	    gtk_container_add(GTK_CONTAINER(inst->specialsmenu), menuitem);
-	    gtk_widget_show(menuitem);
+		break;
+	    }
+	    if (menuitem) {
+		gtk_container_add(GTK_CONTAINER(menu), menuitem);
+		gtk_widget_show(menuitem);
+	    }
 	}
 	gtk_widget_show(inst->specialsitem1);
 	gtk_widget_show(inst->specialsitem2);
@@ -3130,9 +3198,50 @@ void update_specials_menu(void *frontend)
     }
 }
 
-int pt_main(int argc, char **argv)
+static void start_backend(struct gui_data *inst)
 {
     extern Backend *select_backend(Config *cfg);
+    char *realhost;
+    const char *error;
+
+    inst->back = select_backend(&inst->cfg);
+
+    error = inst->back->init((void *)inst, &inst->backhandle,
+			     &inst->cfg, inst->cfg.host, inst->cfg.port,
+			     &realhost, inst->cfg.tcp_nodelay,
+			     inst->cfg.tcp_keepalives);
+
+    if (error) {
+	char *msg = dupprintf("Unable to open connection to %s:\n%s",
+			      inst->cfg.host, error);
+	inst->exited = TRUE;
+	fatal_message_box(inst->window, msg);
+	sfree(msg);
+	exit(0);
+    }
+
+    if (inst->cfg.wintitle[0]) {
+	set_title(inst, inst->cfg.wintitle);
+	set_icon(inst, inst->cfg.wintitle);
+    } else {
+	char *title = make_default_wintitle(realhost);
+	set_title(inst, title);
+	set_icon(inst, title);
+	sfree(title);
+    }
+    inst->back->provide_logctx(inst->backhandle, inst->logctx);
+
+    term_provide_resize_fn(inst->term, inst->back->size, inst->backhandle);
+
+    inst->ldisc =
+	ldisc_create(&inst->cfg, inst->term, inst->back, inst->backhandle,
+		     inst);
+
+    gtk_widget_hide(inst->restartitem);
+}
+
+int pt_main(int argc, char **argv)
+{
     extern int cfgbox(Config *cfg);
     struct gui_data *inst;
 
@@ -3298,6 +3407,9 @@ int pt_main(int argc, char **argv)
 } while (0)
 	if (new_session)
 	    MKMENUITEM("New Session", new_session_menuitem);
+        MKMENUITEM("Restart Session", restart_session_menuitem);
+	inst->restartitem = menuitem;
+	gtk_widget_hide(inst->restartitem);
         MKMENUITEM("Duplicate Session", dup_session_menuitem);
 	if (saved_sessions) {
 	    struct sesslist sesslist;
@@ -3336,6 +3448,8 @@ int pt_main(int argc, char **argv)
 	inst->specialsitem1 = menuitem;
 	MKMENUITEM(NULL, NULL);
 	inst->specialsitem2 = menuitem;
+	gtk_widget_hide(inst->specialsitem1);
+	gtk_widget_hide(inst->specialsitem2);
 	MKMENUITEM("Clear Scrollback", clear_scrollback_menuitem);
 	MKMENUITEM("Reset Terminal", reset_terminal_menuitem);
 	MKMENUITEM("Copy All", copy_all_menuitem);
@@ -3363,42 +3477,8 @@ int pt_main(int argc, char **argv)
 
     term_size(inst->term, inst->cfg.height, inst->cfg.width, inst->cfg.savelines);
 
-    inst->back = select_backend(&inst->cfg);
-    {
-	char *realhost;
-	const char *error;
+    start_backend(inst);
 
-	error = inst->back->init((void *)inst, &inst->backhandle,
-                                 &inst->cfg, inst->cfg.host, inst->cfg.port,
-                                 &realhost, inst->cfg.tcp_nodelay,
-				 inst->cfg.tcp_keepalives);
-
-	if (error) {
-	    char *msg = dupprintf("Unable to open connection to %s:\n%s",
-                                  inst->cfg.host, error);
-            inst->exited = TRUE;
-	    fatal_message_box(inst->window, msg);
-            sfree(msg);
-	    return 0;
-	}
-
-        if (inst->cfg.wintitle[0]) {
-            set_title(inst, inst->cfg.wintitle);
-            set_icon(inst, inst->cfg.wintitle);
-	} else {
-            char *title = make_default_wintitle(realhost);
-            set_title(inst, title);
-            set_icon(inst, title);
-            sfree(title);
-        }
-    }
-    inst->back->provide_logctx(inst->backhandle, inst->logctx);
-    update_specials_menu(inst);
-
-    term_provide_resize_fn(inst->term, inst->back->size, inst->backhandle);
-
-    inst->ldisc =
-	ldisc_create(&inst->cfg, inst->term, inst->back, inst->backhandle, inst);
     ldisc_send(inst->ldisc, NULL, 0, 0);/* cause ldisc to notice changes */
 
     /* now we're reday to deal with the child exit handler being

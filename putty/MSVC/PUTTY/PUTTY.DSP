@@ -106,6 +106,10 @@ SOURCE=..\..\.\config.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\.\cproxy.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\.\dialog.c
 # End Source File
 # Begin Source File

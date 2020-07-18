@@ -97,6 +97,7 @@ static void setup_utmp(char *ttyname, char *location)
 #endif
     struct passwd *pw;
     FILE *wtmp;
+    time_t uttime;
 
     pw = getpwuid(getuid());
     memset(&utmp_entry, 0, sizeof(utmp_entry));
@@ -106,7 +107,10 @@ static void setup_utmp(char *ttyname, char *location)
     strncpy(utmp_entry.ut_id, ttyname+8, lenof(utmp_entry.ut_id));
     strncpy(utmp_entry.ut_user, pw->pw_name, lenof(utmp_entry.ut_user));
     strncpy(utmp_entry.ut_host, location, lenof(utmp_entry.ut_host));
-    time(&utmp_entry.ut_time);
+    /* Apparently there are some architectures where (struct utmp).ut_time
+     * is not essentially time_t (e.g. Linux amd64). Hence the temporary. */
+    time(&uttime);
+    utmp_entry.ut_time = uttime; /* may truncate */
 
 #if defined HAVE_PUTUTLINE
     utmpname(UTMP_FILE);
@@ -141,13 +145,15 @@ static void cleanup_utmp(void)
 {
 #ifndef OMIT_UTMP
     FILE *wtmp;
+    time_t uttime;
 
     if (!pty_stamped_utmp)
 	return;
 
     utmp_entry.ut_type = DEAD_PROCESS;
     memset(utmp_entry.ut_user, 0, lenof(utmp_entry.ut_user));
-    time(&utmp_entry.ut_time);
+    time(&uttime);
+    utmp_entry.ut_time = uttime;
 
     if ((wtmp = fopen(WTMP_FILE, "a")) != NULL) {
 	fwrite(&utmp_entry, 1, sizeof(utmp_entry), wtmp);
@@ -584,6 +590,29 @@ static const char *pty_init(void *frontend, void **backend_handle, Config *cfg,
 	    sprintf(windowid_env_var, "WINDOWID=%ld", windowid);
 	    putenv(windowid_env_var);
 	}
+	{
+	    char *e = cfg->environmt;
+	    char *var, *varend, *val, *varval;
+	    while (*e) {
+		var = e;
+		while (*e && *e != '\t') e++;
+		varend = e;
+		if (*e == '\t') e++;
+		val = e;
+		while (*e) e++;
+		e++;
+
+		varval = dupprintf("%.*s=%s", varend-var, var, val);
+		putenv(varval);
+		/*
+		 * We must not free varval, since putenv links it
+		 * into the environment _in place_. Weird, but
+		 * there we go. Memory usage will be rationalised
+		 * as soon as we exec anyway.
+		 */
+	    }
+	}
+
 	/*
 	 * SIGINT and SIGQUIT may have been set to ignored by our
 	 * parent, particularly by things like sh -c 'pterm &' and
